@@ -129,6 +129,34 @@ export function validateProjectName(name: string): boolean | string {
 - Use `useQuery` for read operations (download, getMetadata)
 - Enable queries conditionally when required params are present
 
+**SDK Integration (v0.9.0):**
+
+All Walrus SDK calls use object-based parameters:
+
+```typescript
+// Upload with object params
+await client.writeBlobToUploadRelay({ blob, nEpochs });
+
+// Download with object params
+await client.readBlob({ blobId });
+
+// Metadata with object params + V1 structure
+const response = await client.getBlobMetadata({ blobId });
+const size = response.metadata.V1.unencoded_length;
+```
+
+**StorageAdapter Interface:**
+
+SDK layers implement base adapter interface without breaking changes:
+
+```typescript
+interface UploadOptions {
+  epochs?: number;
+  contentType?: string;
+  signer?: any; // Typed properly with wallet integration
+}
+```
+
 **Provider Composition:**
 
 ```tsx

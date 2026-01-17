@@ -7,7 +7,7 @@ effort: 12h
 branch: main
 tags: [templates, sdk-upgrade, wallet-integration, breaking-fix]
 created: 2026-01-17
-updated: 2026-01-18T00:07:00+07:00
+updated: 2026-01-18T00:17:00+07:00
 ---
 
 # Implementation Plan: Template Critical Fixes
@@ -44,7 +44,7 @@ This plan addresses **critical bugs** preventing generated projects from working
 |-------|-------------|--------|--------|-----------|
 | [Phase 1](phase-01-fix-import-paths.md) | Fix import paths in sdk-mysten | ✅ | 1h | 2026-01-17T23:54 |
 | [Phase 2](phase-02-add-vite-types.md) | Add Vite types to tsconfig | ✅ | 0.5h | 2026-01-18T00:07 |
-| [Phase 3](phase-03-update-sdk-api.md) | Update SDK v0.9.0 API calls | ⬜ | 2h | - |
+| [Phase 3](phase-03-update-sdk-api.md) | Update SDK v0.9.0 API calls | ✅ | 2h | 2026-01-18T00:17 |
 | [Phase 4](phase-04-wallet-signer-integration.md) | Implement wallet signer integration | ⬜ | 3h | - |
 | [Phase 5](phase-05-fix-type-mismatches.md) | Fix type mismatches | ⬜ | 1h | - |
 | [Phase 6](phase-06-remove-git-automation.md) | Remove git automation | ⬜ | 0.5h | - |

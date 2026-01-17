@@ -13,11 +13,14 @@ export class MystenStorageAdapter implements StorageAdapter {
   ): Promise<string> {
     const client = getWalrusClient();
 
-    const bytes =
+    const blob =
       data instanceof File ? new Uint8Array(await data.arrayBuffer()) : data;
 
     try {
-      const result = await client.writeBlobToUploadRelay(bytes, {
+      // v0.9.0 API: Object-based parameters
+      // NOTE: Signer integration pending Phase 4 - wallet signer will be passed via options.signer
+      const result = await client.writeBlobToUploadRelay({
+        blob,
         nEpochs: options?.epochs || 1,
       });
 
@@ -38,7 +41,8 @@ export class MystenStorageAdapter implements StorageAdapter {
     const client = getWalrusClient();
 
     try {
-      const data = await client.readBlob(blobId);
+      // v0.9.0 API: Object-based parameters
+      const data = await client.readBlob({ blobId });
 
       return data;
     } catch (error) {
@@ -52,13 +56,21 @@ export class MystenStorageAdapter implements StorageAdapter {
     const client = getWalrusClient();
 
     try {
-      const metadata = await client.getBlobMetadata(blobId);
+      // v0.9.0 API: Object-based parameters + V1 metadata structure
+      const response = await client.getBlobMetadata({ blobId });
+
+      // Validate V1 structure exists
+      if (!response.metadata?.V1) {
+        throw new Error('Invalid metadata structure: V1 format not found');
+      }
+
+      const metadata = response.metadata.V1;
 
       return {
         blobId,
-        size: metadata.size,
+        size: metadata.unencoded_length,
         contentType: metadata.contentType,
-        createdAt: metadata.createdAt || Date.now(),
+        createdAt: metadata.createdAt ?? 0,
       };
     } catch (error) {
       throw new Error(

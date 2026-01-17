@@ -241,7 +241,12 @@ export interface StorageAdapter {
 
 **Implemented Adapters:**
 
-- **sdk-mysten** (`templates/sdk-mysten/src/adapter.ts`): WalrusStorageAdapter using @mysten/walrus SDK with singleton client pattern.
+- **sdk-mysten** (`templates/sdk-mysten/src/adapter.ts`):
+  - WalrusStorageAdapter using @mysten/walrus SDK v0.9.0
+  - Singleton client pattern
+  - Object-based API parameters
+  - V1 metadata structure with validation
+  - Signer interface prepared for wallet integration
 
 ## 6. React Framework Layer Architecture
 

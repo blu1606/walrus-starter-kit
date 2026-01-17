@@ -93,9 +93,9 @@
 
 ## 📈 Progress Summary
 
-- **Overall Completion:** 93% (Core Engine & React MVP Ready + Template Fixes 2/8)
+- **Overall Completion:** 94% (Core Engine & React MVP Ready + Template Fixes 3/8)
 - **Current Milestone:** v0.1.0 Alpha Release
-- **Last Update:** 2026-01-18 00:07
+- **Last Update:** 2026-01-18 00:17
 
 ---
 
@@ -119,6 +119,15 @@
   - TypeScript compilation verified successful
   - Code review score: 9/10 approved
   - **Completed:** 2026-01-18T00:07:00+07:00
+
+- **SDK v0.9.0 API Migration (Phase 3/8)** - Updated to object-based SDK parameters
+  - Updated 3 methods in adapter.ts: writeBlob, readBlob, getBlobMetadata
+  - Changed from positional args to object-based API (blob, epochs, deletable, signer)
+  - Fixed metadata access to use V1 versioned structure (metadata.V1.unencoded_length)
+  - Added signer interface to UploadOptions in storage.ts
+  - TypeScript compilation verified - no errors
+  - Code review score: 9/10 approved (after fixes)
+  - **Completed:** 2026-01-18T00:17:00+07:00
 
 #### Added
 
