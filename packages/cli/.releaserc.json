@@ -1,0 +1,37 @@
+{
+  "branches": ["main"],
+  "repositoryUrl": "https://github.com/blu1606/walrus-starter-kit",
+  "tagFormat": "@walrus-kit/create-walrus-app-v${version}",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": true,
+        "pkgRoot": ".",
+        "tarballDir": "dist",
+        "provenance": true
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": []
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["package.json", "CHANGELOG.md"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ]
+  ]
+}

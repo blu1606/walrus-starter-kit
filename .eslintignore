@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+dist
+build
+coverage
+
+# Templates - these are boilerplate code with their own configs
+templates/
+packages/cli/templates/
+
+# Output files
+*.min.js
+*.bundle.js
+
+# Generated files
+.next
+.cache

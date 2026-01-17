@@ -49,6 +49,15 @@ pnpm dev
 - `pnpm test` - Run tests across all packages
 - `pnpm lint` - Lint all TypeScript files
 - `pnpm format` - Format code with Prettier
+- `pnpm release` - Test release process locally (dry-run)
+
+## Contributing
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and releases. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## Releasing
+
+Releases are automated using semantic-release. See [RELEASE_GUIDE.md](RELEASE_GUIDE.md) for the complete release process.
 
 ## Packages
 
