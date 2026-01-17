@@ -26,9 +26,6 @@ importers:
 
   packages/cli:
     dependencies:
-      '@walrus-kit/create-walrus-app':
-        specifier: file:D:/Sui/walrus-starter-kit/packages/cli/walrus-kit-create-walrus-app-0.1.0.tgz
-        version: file:packages/cli/walrus-kit-create-walrus-app-0.1.0.tgz
       commander:
         specifier: ^11.1.0
         version: 11.1.0
