@@ -38,7 +38,6 @@
     "url": "https://github.com/blu1606/walrus-starter-kit.git"
   },
   "dependencies": {
-    "@walrus-kit/create-walrus-app": "file:D:/Sui/walrus-starter-kit/packages/cli/walrus-kit-create-walrus-app-0.1.0.tgz",
     "commander": "^11.1.0",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^11.2.0",
