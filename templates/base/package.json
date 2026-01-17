@@ -1,0 +1,19 @@
+{
+  "name": "walrus-app-base",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Override by framework layer'",
+    "build": "echo 'Override by framework layer'",
+    "preview": "echo 'Override by framework layer'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/parser": "^6.19.1",
+    "@typescript-eslint/eslint-plugin": "^6.19.1"
+  }
+}
