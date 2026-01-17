@@ -37,7 +37,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blu1606/walrus-starter-kit.git",
+    "url": "https://github.com/Walrus-starter-kit/walrus-starter-kit.git",
     "directory": "packages/cli"
   },
   "dependencies": {
