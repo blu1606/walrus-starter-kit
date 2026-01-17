@@ -1,5 +1,5 @@
 {
-  "name": "{{projectName}}",
+  "name": "gallery-demo",
   "version": "0.1.0",
   "private": true,
   "description": "Walrus application scaffolded with create-walrus-app",

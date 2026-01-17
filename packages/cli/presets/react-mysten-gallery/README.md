@@ -1,4 +1,4 @@
-# {{projectName}}
+# gallery-demo
 
 This is a File Gallery Walrus application.
 
