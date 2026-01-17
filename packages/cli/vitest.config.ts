@@ -11,6 +11,7 @@ export default defineConfig({
       '**/*.test.js',
       'tests/integration/**',
       'templates/**',
+      'test-output/**',
     ],
     testTimeout: 60_000,
     hookTimeout: 30_000,
