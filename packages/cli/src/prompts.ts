@@ -2,6 +2,7 @@ import prompts from 'prompts';
 import { Context } from './types.js';
 import { COMPATIBILITY_MATRIX, SDK_METADATA } from './matrix.js';
 import { validateProjectName } from './validator.js';
+import { detectPackageManager } from './utils/detect-pm.js';
 
 export async function runPrompts(
   initial: Partial<Context> = {}
@@ -9,14 +10,14 @@ export async function runPrompts(
   const response = await prompts(
     [
       {
-        type: 'text',
+        type: initial.projectName ? null : 'text',
         name: 'projectName',
         message: 'Project name:',
         initial: initial.projectName || 'my-walrus-app',
         validate: validateProjectName,
       },
       {
-        type: 'select',
+        type: initial.sdk ? null : 'select',
         name: 'sdk',
         message: 'Choose Walrus SDK:',
         choices: [
@@ -36,12 +37,13 @@ export async function runPrompts(
         initial: 0,
       },
       {
-        type: 'select',
+        type: initial.framework ? null : 'select',
         name: 'framework',
         message: 'Choose framework:',
         choices: (prev) => {
+          const sdk = initial.sdk || prev;
           const frameworks =
-            COMPATIBILITY_MATRIX[prev as keyof typeof COMPATIBILITY_MATRIX]
+            COMPATIBILITY_MATRIX[sdk as keyof typeof COMPATIBILITY_MATRIX]
               .frameworks;
           return frameworks.map((f) => ({
             title:
@@ -55,12 +57,13 @@ export async function runPrompts(
         },
       },
       {
-        type: 'select',
+        type: initial.useCase ? null : 'select',
         name: 'useCase',
         message: 'Choose use case:',
         choices: (prev, answers) => {
+          const sdk = initial.sdk || answers.sdk;
           const useCases =
-            COMPATIBILITY_MATRIX[answers.sdk as keyof typeof COMPATIBILITY_MATRIX]
+            COMPATIBILITY_MATRIX[sdk as keyof typeof COMPATIBILITY_MATRIX]
               .useCases;
           return useCases.map((uc) => ({
             title:
@@ -74,16 +77,32 @@ export async function runPrompts(
         },
       },
       {
-        type: 'confirm',
+        type: initial.analytics !== undefined ? null : 'confirm',
         name: 'analytics',
         message: 'Include Blockberry analytics?',
         initial: false,
       },
       {
-        type: 'confirm',
+        type: initial.tailwind !== undefined ? null : 'confirm',
         name: 'tailwind',
         message: 'Include Tailwind CSS?',
         initial: true,
+      },
+      {
+        type: initial.packageManager ? null : 'select',
+        name: 'packageManager',
+        message: 'Choose package manager:',
+        choices: [
+          { title: 'npm', value: 'npm' },
+          { title: 'pnpm', value: 'pnpm' },
+          { title: 'yarn', value: 'yarn' },
+          { title: 'bun', value: 'bun' },
+        ],
+        initial: () => {
+          const detected = detectPackageManager();
+          const index = ['npm', 'pnpm', 'yarn', 'bun'].indexOf(detected);
+          return index !== -1 ? index : 0;
+        },
       },
     ],
     {
@@ -94,11 +113,10 @@ export async function runPrompts(
     }
   );
 
-  // Handle Ctrl+C
-  if (!response.projectName) {
+  if (!response.projectName && !initial.projectName) {
     console.log('\nOperation cancelled.');
     process.exit(0);
   }
 
-  return response;
+  return { ...initial, ...response };
 }

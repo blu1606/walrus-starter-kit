@@ -37,6 +37,10 @@ program
   .option('--skip-install', 'Skip dependency installation', false)
   .option('--skip-git', 'Skip git initialization', false)
   .option('--skip-validation', 'Skip project validation', false)
+  .option(
+    '-p, --package-manager <pm>',
+    'Package manager to use (npm | pnpm | yarn | bun)'
+  )
   .action(async (projectNameArg, options) => {
     try {
       logger.info('🚀 Welcome to Walrus Starter Kit!');
