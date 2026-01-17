@@ -114,10 +114,10 @@ test(
   }
 );
 
-// Test 4: Valid non-interactive mode with all options
+// Test 4: Valid non-interactive mode with all SDK options
 test(
-  'Valid CLI flags with all options',
-  'echo "" | npx tsx src/index.ts my-app --sdk tusky --framework vue --use-case gallery --analytics --no-tailwind',
+  'Valid CLI flags - Tusky + Vue + Gallery',
+  'echo "" | npx tsx src/index.ts my-app --sdk tusky --framework vue --use-case gallery',
   {
     hasWelcome: /Welcome/,
     hasValid: /valid/,

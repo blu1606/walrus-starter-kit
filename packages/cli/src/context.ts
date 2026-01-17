@@ -62,8 +62,9 @@ export function buildContext(
     sdk,
     framework,
     useCase,
-    analytics: Boolean(merged.analytics),
-    tailwind: Boolean(merged.tailwind),
+    // Temporarily disabled until templates are implemented
+    analytics: false, // Boolean(merged.analytics),
+    tailwind: false, // Boolean(merged.tailwind),
     packageManager: packageManager as Context['packageManager'],
   };
 }
