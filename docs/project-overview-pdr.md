@@ -30,7 +30,7 @@ The goal is to provide the "create-next-app" experience for the Walrus ecosystem
 
 - **Interactive CLI:**
     1. Project name selection.
-    2. SDK selection (e.g., `@mysten/walrus`, `@tusky-io/ts-sdk`).
+    2. SDK selection (e.g., `@mysten/walrus`).
     3. Framework selection (e.g., React, Vue, Plain TS).
     4. Use Case selection (e.g., Simple Upload, File Gallery, DeFi/NFT).
     5. Optional features (Tailwind CSS, Analytics).

@@ -656,7 +656,7 @@ After Phase 4 completion:
 
 1. **Phase 5**: Create React framework layer (uses this adapter)
 2. **Phase 6**: Build use case templates (consume adapter)
-3. **Future**: Add Tusky + Hibernuts SDK layers (same interface)
+3. **Future**: Support additional community SDKs (using same interface)
 
 ### Dependencies for Next Phase
 

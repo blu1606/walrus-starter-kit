@@ -22,7 +22,6 @@
 
 1. **Simple Upload** - Single file upload/download (MVP priority)
 2. **File Gallery** - Multiple file management with index
-3. **DeFi/NFT Metadata** - JSON metadata storage for NFTs
 
 Each use case is a **complete working application** that combines:
 
@@ -35,10 +34,9 @@ Each use case is a **complete working application** that combines:
 
 ### Functional
 
-- Three complete use case templates
+- Two complete use case templates
 - File upload/download UI
 - Gallery index management
-- NFT metadata schema
 - Loading/error states
 - Success feedback
 
@@ -85,21 +83,6 @@ templates/gallery/
 │   └── styles.css
 ├── package.json
 └── README.md
-
-templates/defi-nft/
-├── src/
-│   ├── components/
-│   │   ├── MetadataForm.tsx
-│   │   ├── MetadataPreview.tsx
-│   │   └── MintButton.tsx
-│   ├── types/
-│   │   └── metadata.ts      # NFT metadata schema
-│   ├── utils/
-│   │   └── validator.ts     # Schema validation
-│   ├── App.tsx
-│   └── styles.css
-├── package.json
-└── README.md
 ```
 
 ## Related Code Files
@@ -125,18 +108,6 @@ templates/defi-nft/
 14. `templates/gallery/src/styles.css`
 15. `templates/gallery/package.json`
 16. `templates/gallery/README.md`
-
-### DeFi/NFT Metadata (2 hours)
-
-17. `templates/defi-nft/src/components/MetadataForm.tsx`
-18. `templates/defi-nft/src/components/MetadataPreview.tsx`
-19. `templates/defi-nft/src/components/MintButton.tsx`
-20. `templates/defi-nft/src/types/metadata.ts`
-21. `templates/defi-nft/src/utils/validator.ts`
-22. `templates/defi-nft/src/App.tsx`
-23. `templates/defi-nft/src/styles.css`
-24. `templates/defi-nft/package.json`
-25. `templates/defi-nft/README.md`
 
 ## Implementation Steps
 
@@ -799,23 +770,12 @@ Follows OpenSea metadata standard:
 - [ ] Test multi-file upload
 - [ ] Test index persistence
 
-### DeFi/NFT
-- [ ] Create `defi-nft/src/types/metadata.ts`
-- [ ] Create `defi-nft/src/utils/validator.ts`
-- [ ] Create `defi-nft/src/components/MetadataForm.tsx`
-- [ ] Create `defi-nft/src/App.tsx`
-- [ ] Create `defi-nft/src/styles.css`
-- [ ] Create `defi-nft/README.md`
-- [ ] Test metadata validation
-- [ ] Test JSON upload
-
 ## Success Criteria
 
-- [ ] All 3 use cases have complete file structures
+- [ ] All 2 use cases have complete file structures
 - [ ] Each use case has working App.tsx
 - [ ] Simple Upload: Upload + download works
 - [ ] Gallery: Multi-file management works
-- [ ] DeFi/NFT: Metadata validation + upload works
 - [ ] All use cases documented in README
 - [ ] Code quality: TypeScript strict, ESLint passes
 

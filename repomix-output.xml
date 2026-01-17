@@ -40,13 +40,18 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
+.env.example
 .eslintrc.json
 .gitignore
 .npmrc
 .prettierrc.json
+docs/code-standards.md
+docs/codebase-summary.md
 docs/design-guidelines.md
 docs/design-phase-summary.md
+docs/project-overview-pdr.md
 docs/project-roadmap.md
+docs/system-architecture.md
 docs/wireframes/cli-output-screenshot.png
 docs/wireframes/cli-output.html
 docs/wireframes/logo.svg
@@ -67,9 +72,23 @@ plans/260117-1358-walrus-starter-kit/phase-07-generation-engine.md
 plans/260117-1358-walrus-starter-kit/phase-08-post-install.md
 plans/260117-1358-walrus-starter-kit/plan.md
 plans/260117-1358-walrus-starter-kit/walrus-starter-kit-plan-repomix.md
+plans/knowledge/Bundle Size Optimization.md
+plans/knowledge/Cross-Platform Path Handling.md
+plans/knowledge/Deep Merge Strategies for package.json.md
+plans/knowledge/E2E Testing Strategy.md
+plans/knowledge/File Gallery UX Patterns.md
+plans/knowledge/Multi-SDK API Comparison.md
+plans/knowledge/Network Endpoints & Configuration.md
+plans/knowledge/NFT Metadata Schema for Walrus.md
+plans/knowledge/React Hooks Patterns for Walrus.md
+plans/knowledge/Sui Wallet Integration Patterns.md
+plans/knowledge/Vite Configuration Deep Dive.md
+plans/knowledge/Walrus Epochs & Blob Lifecycle.md
 plans/reports/code-reviewer-260117-1436-phase-01-review.md
 plans/reports/code-reviewer-260117-1445-phase1-reverify.md
+plans/reports/docs-manager-260117-1536-tusky-removal.md
 plans/reports/project-manager-260117-1448-phase-1-completion.md
+plans/reports/repomix-260117-1520-knowledge-base.md
 plans/reports/researcher-260117-1353-cli-scaffolding.md
 plans/reports/researcher-260117-1353-mysten-walrus-sdk.md
 plans/reports/researcher-260117-1353-nextjs-app-router.md
@@ -86,6 +105,1757 @@ tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="plans/knowledge/Bundle Size Optimization.md">
+Vite enables tree-shaking for ESM packages like @mysten/walrus (use named imports e.g., { WalrusClient } to minimize); analyze with rollup-plugin-visualizer. Code split routes/components dynamically, lazy-load SDK on upload/download pages. Target gzipped totals: <100KB vendor, <50KB main, <200KB total interactive. [developerway](https://www.developerway.com/posts/bundle-size-investigation)
+
+## Optimization Checklist
+
+### SDK Tree-Shaking
+- ✅ Named imports: `import { WalrusClient } from '@mysten/walrus'` (no barrel `import *`). [developerway](https://www.developerway.com/posts/bundle-size-investigation)
+- ✅ Dynamic SDK: `const { WalrusClient } = await import('@mysten/walrus')` in upload modal.
+- ✅ Analyzer: Add to vite.config.ts:
+  ```typescript
+  import { visualizer } from 'rollup-plugin-visualizer';
+  plugins: [visualizer({ filename: './dist/report.html', gzipSize: true })]
+  ```
+  Run `vite build --mode production` → open report.html [dev](https://dev.to/werliton/analise-seu-app-como-um-heroi-benchmarking-com-vite-rollup-em-projetos-react-ak)
+
+### Code Splitting
+- ✅ Routes: `const UploadPage = lazy(() => import('./UploadPage'))` [github](https://github.com/vitejs/vite/discussions/17730)
+- ✅ Components: Lazy heavy charts/galleries.
+- ✅ manualChunks in vite.config.ts:
+  ```typescript
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          sui: ['@mysten/sui', '@mysten/walrus'], // ~150KB split
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
+  }
+  ```
+  Results: main.[hash].js <50KB, sui.[hash].js ~120KB gzipped [mykolaaleksandrov](https://www.mykolaaleksandrov.dev/posts/2025/10/react-lazy-suspense-vite-manualchunks/)
+
+### Monitoring & CI
+- ✅ vite-plugin-bundlesize: Enforce limits.
+  ```typescript
+  // vite.config.ts
+  import bundlesize from 'vite-plugin-bundlesize';
+  plugins: [bundlesize({
+    limits: [
+      { name: 'assets/index-*.js', limit: '50 kB' },
+      { name: 'assets/*', limit: '200 kB' },
+    ],
+  })]
+  ```
+  Fail build if exceeded [npmjs](https://npmjs.com/package/vite-plugin-bundlesize)
+- ✅ Bundlewatch CI: `npx bundlewatch --github-pull-request` (diff PR sizes).
+- ✅ Targets:
+  | Chunk       | Gzipped Target |
+  |-------------|----------------|
+  | main       | <50KB         |
+  | vendor     | <100KB        |
+  | sui/walrus | <150KB        |
+  | Total LCP  | <200KB        |
+
+## vite.config.ts Snippet
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+import bundlesize from 'vite-plugin-bundlesize';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    visualizer({ open: true, gzipSize: true }),
+    bundlesize({
+      limits: [{ name: '**/*', limit: '300 kB' }],
+    }),
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@mysten/walrus') || id.includes('@mysten/sui')) return 'sui';
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+    cssCodeSplit: true,
+  },
+});
+```
+Run `vite build && vite-bundle-analyzer` for viz [npmjs](https://www.npmjs.com/package/vite-bundle-analyzer)
+
+## Verification Commands
+
+- `npm run analyze` → View treemap.
+- Lighthouse: Aim PS75+ (bundle <170KB median).
+- Bundlephobia: Check deps individually. [frontendjoy](https://www.frontendjoy.com/p/how-i-reduced-my-react-bundle-size-by-30-with-real-examples)
+</file>
+
+<file path="plans/knowledge/Cross-Platform Path Handling.md">
+Node.js `path` module handles cross-platform paths automatically, using `/` on Unix/macOS and `\` on Windows. Always prefer `path.join()` and `path.resolve()` over string concatenation to avoid separator issues and traversal vulnerabilities. Validation prevents security risks like path traversal via `../` or Windows device names (e.g., CON). [stackoverflow](https://stackoverflow.com/questions/66042298/how-to-correctly-create-cross-platform-paths-with-nodejs)
+
+## Windows-Specific Handling
+
+Windows paths start with drive letters (C:\), use `\` separators, and hit 260-char MAX_PATH limit (use `\\?\` prefix or enable LongPathsEnabled registry). PowerShell/CMD handle native formats; WSL uses Unix-style but maps Windows drives (/mnt/c/). CLI tools must resolve relative paths with `path.resolve()` to get absolute, normalized forms. [github](https://github.com/ehmicky/cross-platform-node-guide/blob/main/docs/3_filesystem/file_paths.md)
+
+## Node.js Path API Usage
+
+- **path.join(...parts)**: Joins with platform separator, ignores non-strings (e.g., `path.join('foo', 'bar')` → 'foo/bar' Unix, 'foo\\bar' Windows). [nodejs](https://nodejs.org/api/path.html)
+- **path.resolve([from...], to)**: Makes absolute from cwd/from dirs (e.g., `path.resolve('..', 'file.txt')` resolves like `cd ..; cd file.txt; pwd`). [shapeshed](https://shapeshed.com/writing-cross-platform-node/)
+- **path.normalize(p)**: Collapses `..`/`./` but doesn't resolve to absolute (use after join for cleaning). [millermedeiros.github](https://millermedeiros.github.io/mdoc/examples/node_api/doc/path.html)
+- **Validation**: Check `path.isAbsolute()`; regex for safe paths: `^(?!.*[<>:"/\\|?*]|(?:^|[/\\])(\.\.|CON|PRN|AUX|NUL|COM\d+|LPT\d+)[/\\]?)[a-zA-Z0-9_./\\\-]+$` (blocks traversal, devices, invalid chars). [zeropath](https://zeropath.com/blog/cve-2025-27210-nodejs-path-traversal-windows)
+
+## Testing Strategies
+
+Test via CI matrix (GitHub Actions: ubuntu-latest/windows-latest/macos-latest) with vitest/jest spawning processes. Mock `process.platform` or use `path.win32`/`path.posix` for portable tests; verify with `fs.existsSync(resolvedPath)`. Pitfalls: unnormalized inputs, device name bypasses, long paths (>260 chars without prefix). [github](https://github.com/ehmicky/cross-platform-node-guide/blob/main/docs/3_filesystem/file_paths.md)
+
+## Code Examples
+
+```javascript
+const path = require('node:path');
+const fs = require('node:fs');
+
+// Safe join/resolve
+const safePath = path.resolve(path.join(baseDir, userInput));
+
+// Validate before use
+function validatePath(input) {
+  const normalized = path.normalize(input);
+  if (!path.isAbsolute(normalized) || /[<>"|?*\x00-\x1f]/.test(normalized) ||
+      /^(?:CON|PRN|AUX|NUL|COM\d+|LPT\d+)/i.test(normalized.replace(/\\/g, '/'))) {
+    throw new Error('Invalid path');
+  }
+  return normalized;
+}
+```
+
+**Test Cases** (use in CI):
+
+| Input                  | Platform | Expected Output (resolve from /home/test) | Valid? |
+|------------------------|----------|-------------------------------------------|--------|
+| '../foo/bar.txt'      | Unix    | /home/foo/bar.txt                        | Yes   |
+| '..\\foo\\bar.txt'    | Windows | C:\foo\bar.txt (from C:\home\test)       | Yes   |
+| 'CON\\..\\etc\\passwd'| Windows | Invalid (blocked)                        | No    |
+| '/very/long/path...'  | Windows | \\?\C:\very\long... (260+ chars)         | Check len |
+| './../..'             | All     | / (root)                                 | Yes   |  [stackoverflow](https://stackoverflow.com/questions/66042298/how-to-correctly-create-cross-platform-paths-with-nodejs)
+</file>
+
+<file path="plans/knowledge/Deep Merge Strategies for package.json.md">
+Research robust package.json deep merge strategies for CLI scaffolding:
+
+1. Existing solutions:
+   - lodash.merge vs deepmerge library
+   - Custom implementations (create-next-app, create-vite)
+   - Pros/cons of each approach
+
+2. Conflict resolution:
+   - Dependency version conflicts (^1.0.0 vs ^2.0.0)
+   - Script name collisions
+   - Config field merging (engines, browserslist)
+
+3. Edge cases:
+   - Nested object merging
+   - Array handling (replace vs concat)
+   - Peer dependency warnings
+
+Output: Recommended merge algorithm with implementation examples.
+
+Work context: d:\Sui\walrus-starter-kit
+Reports: d:\Sui\walrus-starter-kit\plans\reports\
+Web Search Prompts:
+
+
+"package.json deep merge cli scaffolding"
+"create-next-app package.json merge strategy"
+"lodash merge vs deepmerge npm"
+"dependency version conflict resolution"
+</file>
+
+<file path="plans/knowledge/E2E Testing Strategy.md">
+E2E testing for CLI scaffolders uses Jest with mock-fs for filesystem isolation, inquirer mocking for prompts, and snapshots for generated code diffs. Verify projects by running npm install/build/test/lint in temp dirs. GitHub Actions matrix ensures cross-OS compatibility. [stackoverflow](https://stackoverflow.com/questions/58413428/jest-mocking-and-testing-the-node-js-filesystem)
+
+## Testing Frameworks
+
+- **Jest**: Snapshots compare generated dirs/files; `--updateSnapshot` for regen.
+- **Prompt Mocking**: `jest.mock('inquirer')`; mock stdin/stdout.
+- **FS Mocking**: mock-fs simulates dir structure; restore post-test. [github](https://github.com/tschaub/mock-fs)
+
+**CLI Test Example**:
+```typescript
+// cli.test.ts
+import { execSync } from 'child_process';
+import mock from 'mock-fs';
+import path from 'path';
+import fs from 'fs';
+
+jest.mock('inquirer', () => ({
+  prompt: () => Promise.resolve({ projectName: 'test-app', features: ['walrus'] }),
+}));
+
+describe('CLI scaffolding', () => {
+  const projectDir = './generated-app';
+
+  beforeEach(() => {
+    mock({}); // Clean FS
+  });
+
+  afterEach(() => mock.restore());
+
+  it('generates Walrus starter kit', async () => {
+    execSync('node bin/cli.js init test-app --features walrus', { cwd: './', stdio: 'pipe' });
+    const files = fs.readdirSync(projectDir);
+    expect(files).toContain('package.json');
+    expect(fs.readFileSync(path.join(projectDir, 'vite.config.ts'), 'utf8')).toMatchSnapshot();
+  });
+});
+```
+
+## Generated Project Verification
+
+Spawn subprocesses in generated dir:
+
+```typescript
+// verifyProject.ts
+import { execSync } from 'child_process';
+import path from 'path';
+
+function verifyProject(dir: string) {
+  const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+  expect(pkg.dependencies['@mysten/walrus']).toBeDefined();
+
+  execSync('npm install', { cwd: dir });
+  execSync('npm run build', { cwd: dir, timeout: 30000 }); // Build check
+  execSync('npm run lint', { cwd: dir }); // ESLint
+  execSync('tsc --noEmit', { cwd: dir }); // Type check
+  execSync('npm test', { cwd: dir }); // Units
+}
+```
+
+
+## CI/CD Configuration
+
+GitHub Actions matrix for OS/Node; test multiple templates.
+
+```yaml
+# .github/workflows/e2e.yml
+name: E2E CLI Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+        node: [18, 20, 22]
+        include:
+          - os: ubuntu-latest
+            template: walrus-basic
+          - os: windows-latest
+            template: walrus-nft
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:e2e # jest --runInBand (serial for FS)
+        env:
+          CI: true
+      - name: Performance Benchmark
+        run: |
+          npm run bench:scaffold # Time init
+        if: matrix.os == 'ubuntu-latest'
+```
+Matrix parallelizes (3 OS x 3 Node x 2 templates); use artifacts for failed dirs. [blacksmith](https://www.blacksmith.sh/blog/matrix-builds-with-github-actions)
+
+## Best Practices
+
+- Run serially (`--runInBand`) for FS conflicts.
+- Update snapshots selectively.
+- Mock global deps (e.g., npm exec).
+- Benchmark scaffold time <5s.
+- Separate smoke tests for quick CI feedback. [jestjs](https://jestjs.io/docs/snapshot-testing)
+</file>
+
+<file path="plans/knowledge/File Gallery UX Patterns.md">
+File galleries persist metadata (blobId, thumbnailUrl, name, size, uploadDate) in IndexedDB for large blobs/binary data, syncing via Walrus/Sui onchain for ownership. Use react-window for virtual scrolling, Canvas API for thumbnails, and react-dropzone for drag-drop. Infinite scroll outperforms pagination for galleries; optimize with WebP/AVIF via browser APIs. [github](https://github.com/bvaughn/react-window)
+
+## Persistence Schema
+
+IndexedDB stores blobs efficiently (~50% disk); LocalStorage limited to strings (~5MB).
+
+| Storage     | Pros                          | Cons                       | Use Case                  |
+|-------------|-------------------------------|----------------------------|---------------------------|
+| IndexedDB  | Async, blobs/objects, indexed | Complex API               | Metadata + thumbnails  [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5) |
+| LocalStorage | Sync, simple                 | Strings only, small quota | User prefs (view/sort)  [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5) |
+
+**Schema Example** (idb-keyval or Dexie.js):
+```javascript
+// Schema: { blobs: [{ id: 'blobId', name: 'file.jpg', thumbnail: blobUrl, size: 1024, date: Date.now(), tags: [] }] }
+```
+
+Sync: Poll Sui object or use RPC subscriptions for updates. [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5)
+
+## Performance Techniques
+
+- **Virtual Scrolling**: react-window/VirtualList for 10k+ items (render viewport only). [web](https://web.dev/articles/virtualize-long-lists-react-window)
+- **Thumbnails**: Canvas resize (100x100px) on upload; store as blob URL. [youtube](https://www.youtube.com/watch?v=5Vro146pDa0)
+- **Lazy Loading**: `loading="lazy"` + IntersectionObserver; use react-intersection-observer. [digitalocean](https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash)
+- **Optimization**: Canvas toBlob('image/webp'); compress via browser-image-resizer.
+
+**Thumbnail Gen**:
+```typescript
+function generateThumbnail(file: File): Promise<string> {
+  return new Promise((res) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    canvas.width = 200; canvas.height = 200;
+    const ctx = canvas.getContext('2d')!;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 200, 200);
+      canvas.toBlob((blob) => res(URL.createObjectURL(blob!)), 'image/webp');
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+```
+
+## UX Patterns & Libraries
+
+- **Views**: Masonry grid (react-masonry-css) > list; toggle via state.
+- **Scroll**: Infinite (react-infinite-scroll-component) with IntersectionObserver. [digitalocean](https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash)
+- **Search/Filter**: Fuse.js on metadata.
+- **Drag-Drop**: react-dropzone.
+
+**Library Recs**:
+| Category       | Libs                          | Why |
+|----------------|-------------------------------|-----|
+| Virtual List  | react-window, virtua         | High perf  [github](https://github.com/bvaughn/react-window) |
+| Infinite Scroll | react-infinite-scroll-component | Easy Unsplash-like  [digitalocean](https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash) |
+| Gallery UI    | react-image-gallery, lightGallery | Thumbs/zoom  [github](https://github.com/brillout/awesome-react-components) |
+| Drop Upload   | react-dropzone               | Drag-drop |
+| IndexedDB     | Dexie.js, idb-keyval         | Typed schema  [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5) |
+
+**Gallery Example** (react-window + infinite):
+```typescript
+import { FixedSizeGrid as Grid } from 'react-window';
+import InfiniteLoader from 'react-window-infinite-loader';
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+function Gallery({ items }) {
+  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({ /* Walrus list query */ });
+  const itemCount = data?.pages.reduce((acc, page) => acc + page.blobs.length, 0) ?? 0;
+
+  return (
+    <InfiniteLoader isItemLoaded={() => true} itemCount={itemCount} loadMoreItems={fetchNextPage} />
+    {({ onItemsRendered, ref }) => (
+      <Grid columnCount={4} columnWidth={250} height={800} rowCount={Math.ceil(itemCount/4)} rowHeight={250} ref={ref} onItemsRendered={onItemsRendered}>
+        {({ columnIndex, rowIndex, style }) => {
+          const idx = rowIndex * 4 + columnIndex;
+          const item = data.pages.flatMap(p => p.blobs)[idx];
+          return <div style={style}><img src={item.thumbnail} loading="lazy" /></div>;
+        }}
+      </Grid>
+    )}
+  );
+}
+```
+</file>
+
+<file path="plans/knowledge/Multi-SDK API Comparison.md">
+The Walrus SDKs differ significantly in design, with @mysten/walrus as the low-level official library for direct blob/quilt operations on Sui testnet/mainnet, while @tusky-io/ts-sdk and @hibernuts/walrus-sdk provide higher-level file system abstractions (Tusky adds E2E encryption and vaults; Hibernuts adds folders/collaboration). No direct comparisons exist, but npm data shows low adoption for alternatives. [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+
+## Compatibility Matrix
+
+| Feature/Method          | @mysten/walrus (Official)  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | @tusky-io/ts-sdk  [github](https://github.com/tusky-io/ts-sdk) | @hibernuts/walrus-sdk  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+|-------------------------|-----------------------------------------------------|----------------------------------|---------------------------------------|
+| Upload (files/blobs)   | `writeFiles(files[], epochs, signer)` or `writeBlob(blob, epochs, signer)`; supports WalrusFile from Uint8Array/Blob/string; browser flow via `writeFilesFlow()` (encode/register/upload/certify)  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | `file.upload(vaultId, path)` (returns uploadId); vault.create() first; supports File-like  [github](https://github.com/tusky-io/ts-sdk) | `uploadFile(file: File, filepath)` or `storeBlob(data: string/Buffer, epochs)`  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+| Download (files/blobs) | `getFiles(ids[])` → WalrusFile (bytes/text/json); `readBlob(blobId)` → Uint8Array  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | `file.arrayBuffer/get(uploadId)` → buffer/metadata; `file.listAll()`  [github](https://github.com/tusky-io/ts-sdk) | `getBlob(blobId)` → Buffer  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+| List/Directory         | Via `blob.files({identifiers/tags/ids})` on quilts  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | `file.listAll()`; vault-based  [github](https://github.com/tusky-io/ts-sdk) | `getFolderContents(folderId)`; `getAllUserFiles()`; `getTreeStructure(path)`  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+| Delete/Deletable       | `deletable: true` param on write  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | Not exposed in core API  [github](https://github.com/tusky-io/ts-sdk) | `deleteNode(id)`  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+
+## Authentication Patterns
+
+@mysten/walrus requires Sui signer (e.g., keypair/Ed25519Keypair) for on-chain txns (SUI/WAL fees); optional uploadRelay with tip. @tusky-io/ts-sdk uses API key, Sui wallet (signPersonalMessage + account), or keypair with `auth.signIn()`; password/self-hosted keys for encryption. @hibernuts/walrus-sdk initializes with aggregator/publisher/apiUrl (no explicit auth shown; likely backend-dependent). [github](https://github.com/tusky-io/ts-sdk)
+
+## Environment Support
+
+All support TypeScript and Node.js (requires SuiClient for official); browser needs special handling. @mysten/walrus: WASM config for Vite/Next.js, browser popup flows. @tusky-io/ts-sdk: Separate `/web` import; Sui dapp-kit integration. @hibernuts/walrus-sdk: File/Buffer support implies browser/Node. [docs.tusky](https://docs.tusky.io/http-api)
+
+## Other Aspects
+
+- **TS Quality**: All TypeScript-native; official has full TypeDocs. Alternatives under active dev (Tusky: 194 releases to May 2025; disclaimer on audits/changes). [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+- **Bundle Sizes**: Not specified; official includes WASM (~heavy for direct node interaction). [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+- **Installation**: `npm i @mysten/walrus @mysten/sui`; `npm i @tusky-io/ts-sdk`; `npm i @hibernuts/walrus-sdk`. [docs.tusky](https://docs.tusky.io/http-api)
+- **Breaking Changes**: Official stable; Tusky frequent (194 releases, API iteration warning); Hibernuts v1.0.1 (9mo old). [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk)
+- **Adoption**: Official tied to Mysten/Sui ecosystem (high indirect use); alternatives low/no dependents, few GitHub stars (Tusky:18), no weekly download stats available. [github](https://github.com/tusky-io/ts-sdk)
+</file>
+
+<file path="plans/knowledge/Network Endpoints & Configuration.md">
+Walrus operates on Mainnet (live since March 2025 with 100+ nodes), Testnet, and Devnet, using decentralized aggregators for reads and publishers for writes. Production favors Mainnet with multiple public endpoints for redundancy; self-hosting recommended for high-volume use. Costs involve WAL/SUI for storage epochs, no fixed quotas but publisher limits apply. [docs.wal](https://docs.wal.app/docs/usage/web-api)
+
+## Environment Endpoints
+
+Use these public URLs; SDK auto-configures Testnet, override for others.
+
+| Network | Aggregator (Read)  [docs.wal](https://docs.wal.app/docs/usage/web-api) | Publisher (Write)  [docs.wal](https://docs.wal.app/docs/usage/web-api) | Notes |
+|---------|--------------------------------------------|------------------------------------|-------|
+| Mainnet | aggregator.walrus-mainnet.walrus.space<br>mainnet-walrus-aggregator.kiliglab.io<br>mainnet-aggregator.walrus.graphyte.dev<br>walrus-aggregator.stakin-nodes.com<br>walrus-aggregator-mainnet.chainode.tech<br>walrus-mainnet-aggregator.stakecraft.com<br>walrus-cache-mainnet.latitude.sh<br>walrus.prostaking.com | Run self-hosted or relays; no central public listed  [docs.wal](https://docs.wal.app/blog/06_mainnet.html) | 100+ nodes; global regions (APAC/EU/US/LATAM); WALCDN routes optimally  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) |
+| Testnet | aggregator.walrus-testnet.walrus.space  [docs.wal](https://docs.wal.app/docs/usage/web-api) | publisher.walrus-testnet.walrus.space  [docs.wal](https://docs.wal.app/docs/usage/web-api) | SDK defaults  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) |
+| Devnet  | aggregator-devnet.walrus.space<br>publisher-devnet.walrus.space  [github](https://github.com/Mr-Sunglasses/walrus-mcp) | As above  [github](https://github.com/Mr-Sunglasses/walrus-mcp) | System object: 0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f19c35b5ca709e1a6991e90dc  [github](https://github.com/Mr-Sunglasses/walrus-mcp) |
+
+## Rate Limits & Quotas
+
+Public publishers enforce defaults; self-host to customize. [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+
+- **Blob Size**: Max ~13.6 GiB per blob. [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+- **HTTP Upload**: Default 10 MiB (--max-body-size); quilts 100 MiB (--max-quilt-body-size). [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+- **Concurrency**: Tune --n-clients, --max-concurrent-requests (default low). [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+- **No Hard Rates**: Throttling via public aggregator/publisher policies; auth/JWT for Mainnet publishers. [docs.wal](https://docs.wal.app/blog/06_mainnet.html)
+- **Costs**: WAL for storage epochs (stake-voted pricing), SUI gas; prepay per epoch. [insights.blockbase](https://insights.blockbase.co/walrus-protocol-a-comprehensive-overview/)
+
+## Stability & Best Practices
+
+Mainnet offers production-grade decentralization with no formal uptime SLA, but 100+ nodes ensure redundancy. Use multiple aggregators (e.g., WalrusCDN auto-routes by latency/region); fallback via SDK retries. Self-run daemon/publisher for control (health endpoint available); monitor metrics/logs. [docs.wal](https://docs.wal.app/docs/operator-guide/aggregator)
+</file>
+
+<file path="plans/knowledge/NFT Metadata Schema for Walrus.md">
+## NFT Metadata Schema for Walrus on Sui
+
+Sui NFTs follow the **Suiet NFT Metadata Standard** (suiet.app/std/nft), embedding core fields directly in the object for explorers/wallets. Walrus **does not use a native `walrus://{blobId}` URI scheme**—instead, reference blobs via **aggregator HTTP URLs** like `https://blobid.walrus-mainnet.walrus.space/{blobId}` or `https://walrus.site/{blobId}` (gateway renders images). [docs.sui](https://docs.sui.io/guides/developer/advanced/custom-indexer/indexer-walrus)
+
+### Verified Schema (Suiet Standard)
+```json
+{
+  "name": "My Walrus NFT",
+  "description": "NFT with image stored on Walrus",
+  "image_url": "https://blobid.walrus-mainnet.walrus.space/{imageBlobId}",
+  "animation_url": "https://blobid.walrus-mainnet.walrus.space/{animBlobId}", // Optional GIF/video
+  "attributes": [
+    { "trait_type": "Blob ID", "value": "{imageBlobId}" },
+    { "display_type": "number", "trait_type": "Epochs", "value": 52 }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://blobid.walrus-mainnet.walrus.space/{metaBlobId}",
+        "type": "application/json"
+      }
+    ],
+    "category": "image"
+  }
+}
+```
+- **No direct blobId in image_url**: Marketplaces (SuiVision) require resolvable HTTP; raw blobIds fail rendering. [walrus.peera](https://walrus.peera.ai/experts/3-0x1deae183f8765c6f92ac6b4f6f7f47c2318e0f5a75a99a6d166baf4fe2d65a87/can-blob-id-replace-image-url-in-nft-contracts-on-sui)
+- **Blob NFT**: Walrus creates Sui `Blob` NFT object post-upload (unique ID, optional Metadata dynamic field). [docs.sui](https://docs.sui.io/guides/developer/advanced/custom-indexer/indexer-walrus)
+- **IPFS Compat**: Use gateways like `https://ipfs.io/ipfs/{cid}` if pinning; Walrus preferred for Sui native.
+
+### Updated Minting Flow (Verified)
+1. Upload image → `{imageBlobId}` + Sui Blob NFT.
+2. JSON with **HTTP aggregator URL** → Upload → `{metaBlobId}`.
+3. Mint NFT with `url: "https://blobid.walrus-mainnet.walrus.space/{metaBlobId}"`.
+
+**Frontend TS (Corrected)**:
+```typescript
+const metaJson = {
+  name: "Walrus NFT",
+  image_url: `https://blobid.walrus-mainnet.walrus.space/${imageBlobId}`, // HTTP!
+  // ...
+};
+```
+
+
+### Move Contract (Test-Ready)
+Deploy/test on Testnet (Suiet Wallet). Full example matches Sui docs.
+
+```move
+// nft.move - Tested pattern from Sui docs + Walrus URL
+module example::nft {
+  use sui::object::{Self, UID};
+  use sui::tx_context::{Self, TxContext};
+  use sui::transfer;
+  use sui::url::{new_unsafe_url as url, Url};
+  use std::string;
+
+  public struct NFT has key, store {
+      id: UID,
+      name: string::String,
+      url: Url, // HTTP to Walrus gateway
+  }
+
+  /// Mint entrypoint
+  public entry fun mint(
+      name: vector<u8>,
+      url_str: vector<u8>, // "https://blobid.walrus.../{metaBlobId}"
+      ctx: &mut TxContext
+  ) {
+      let nft = NFT {
+          id: object::new(ctx),
+          name: string::utf8(name),
+          url: url(url_str),
+      };
+      transfer::public_transfer(nft, tx_context::sender(ctx));
+  }
+}
+```
+- **Test**: `sui client ptb --gas-budget 10000000 --move-call <PKG>::nft::mint "Test NFT" b"https://blobid.walrus-testnet.walrus.space/{fakeId}"`. [github](https://github.com/tusky-io/ts-sdk)
+- **Display**: Sui explorers parse `url` field for metadata fetch/render.
+
+### Gateways for Production
+| Network | Aggregator URL Template |
+|---------|-------------------------|
+| Mainnet | `https://blobid.walrus-mainnet.walrus.space/{blobId}` [walrus.peera](https://walrus.peera.ai/experts/3-0x1deae183f8765c6f92ac6b4f6f7f47c2318e0f5a75a99a6d166baf4fe2d65a87/can-blob-id-replace-image-url-in-nft-contracts-on-sui) |
+| Testnet | `https://blobid.walrus-testnet.walrus.space/{blobId}` |
+| Alt     | `https://walrus.site/{blobId}` (UI-friendly) [stakin](https://stakin.com/blog/how-to-build-your-own-walrus-site) |
+
+**Verification Sources**: Sui docs, Walrus indexer guide, community consensus—no native `walrus://` scheme exists; HTTP required for wallet support. [walrus.peera](https://walrus.peera.ai/experts/3-0x1deae183f8765c6f92ac6b4f6f7f47c2318e0f5a75a99a6d166baf4fe2d65a87/can-blob-id-replace-image-url-in-nft-contracts-on-sui)
+</file>
+
+<file path="plans/knowledge/React Hooks Patterns for Walrus.md">
+React hooks for Walrus integrate with @mysten/walrus and @mysten/dapp-kit, using useSuiClientQuery for metadata and custom logic for upload/download with progress. Zustand suits queue/state management over Context for scalability; Suspense enables lazy blob loading via throw promise patterns. These patterns ensure optimistic UI, error resilience, and concurrent fetches. [github](https://github.com/bezkoder/react-typescript-file-upload)
+
+## Core Hooks Design
+
+```typescript
+// hooks/useWalrus.ts
+import { useMemo, useState, useCallback } from 'react';
+import { WalrusClient } from '@mysten/walrus';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+// Global upload queue store (Zustand)
+interface QueueItem { id: string; file: File; progress: number; status: 'pending'|'uploading'|'done'|'error'; blobId?: string; }
+interface QueueStore { queue: QueueItem[]; add: (item: Omit<QueueItem,'id'>) => void; update: (id: string, updates: Partial<QueueItem>) => void; }
+export const useQueueStore = create<QueueStore>()(
+  devtools(persist((set, get) => ({
+    queue: [],
+    add: (item) => set({ queue: [...get().queue, { ...item, id: crypto.randomUUID(), progress: 0, status: 'pending' }] }),
+    update: (id, updates) => set({ queue: get().queue.map(q => q.id === id ? { ...q, ...updates } : q) }),
+  }), { name: 'walrus-queue' }))
+);
+
+// useWalrusUpload: Progress-tracked upload
+export function useWalrusUpload(epochs: number = 4) {
+  const client = useSuiClient();
+  const [uploading, setUploading] = useState(false);
+  const addToQueue = useQueueStore(s => s.add);
+  const updateQueue = useQueueStore(s => s.update);
+
+  const upload = useCallback(async (files: File[], signer?: any) => {
+    const walrus = await WalrusClient.fromClient(client, { signer });
+    setUploading(true);
+    const promises = files.map(async (file) => {
+      const id = crypto.randomUUID();
+      addToQueue({ file, progress: 0, status: 'uploading' });
+      try {
+        // Simulate progress; use walrus.writeFiles with relay
+        const result = await walrus.writeFiles([{ contents: file }], { epochs });
+        updateQueue(id, { progress: 100, status: 'done', blobId: result.blobId });
+      } catch (e) {
+        updateQueue(id, { status: 'error' });
+      }
+    });
+    await Promise.all(promises);
+    setUploading(false);
+  }, [client, epochs]);
+
+  return { upload, uploading, queue: useQueueStore(s => s.queue) };
+}
+
+// useWalrusDownload: Cached fetch
+export function useWalrusDownload(blobId: string | null) {
+  const client = useSuiClient();
+  const [data, setData] = useState<Uint8Array | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const download = useCallback(async () => {
+    if (!blobId) return;
+    setLoading(true);
+    const walrus = await WalrusClient.fromClient(client);
+    const blob = await walrus.readBlob(blobId);
+    setData(blob);
+    setLoading(false);
+  }, [blobId, client]);
+
+  return { data, loading, download };
+}
+
+// useWalrusMetadata: Query hook
+import { useSuiClientQuery } from '@mysten/dapp-kit';
+export function useWalrusMetadata(blobId: string) {
+  return useSuiClientQuery({
+    method: 'suix_getObject', // Or custom Walrus query
+    params: [blobId],
+    options: { enabled: !!blobId, staleTime: 5 * 60 * 1000 },
+  });
+}
+```
+
+
+## State & Queue Management
+
+Use Zustand for queue (add/update items); pair with TanStack Query for metadata. Error boundaries wrap uploads:
+
+```typescript
+// ErrorBoundary.tsx
+import { Component, ReactNode } from 'react';
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() { return this.state.hasError ? <div>Upload failed</div> : this.props.children; }
+}
+```
+Zustand > Context for non-render-blocking updates. [reddit](https://www.reddit.com/r/react/comments/1fp27ek/state_management_when_to_use_context_api_vs_redux/)
+
+## Suspense & Optimistic Patterns
+
+Wrap downloads in Suspense for lazy loading; throw promises for concurrent fetches.
+
+```typescript
+// BlobViewer.tsx (Suspense-enabled)
+let cache = new Map();
+async function fetchBlob(blobId: string) {
+  if (cache.has(blobId)) return cache.get(blobId);
+  const promise = (async () => {
+    const walrus = await WalrusClient.load(/*...*/);
+    const data = await walrus.readBlob(blobId);
+    cache.set(blobId, data);
+    return data;
+  })();
+  cache.set(blobId, promise);
+  return promise;
+}
+
+function BlobViewer({ blobId }: { blobId: string }) {
+  throw fetchBlob(blobId); // Suspends
+}
+
+<Suspense fallback={<div>Loading blob...</div>}>
+  <BlobViewer blobId={blobId} />
+</Suspense>
+```
+Optimistic: Update queue to 'uploading' pre-call, rollback on error. [17.reactjs](https://17.reactjs.org/docs/concurrent-mode-suspense.html)
+</file>
+
+<file path="plans/knowledge/Sui Wallet Integration Patterns.md">
+Sui Wallet integration in browser DApps uses the @mysten/dapp-kit for React hooks and UI components supporting all Sui wallets via adapters, including browser extensions like Sui Wallet and Suiet. WalletConnect v2 enables mobile/browser bridging; multi-wallet selectors auto-detect via window.sui. Transactions use TransactionBlock from @mysten/sui.js with automatic gas estimation and signing. [docs.sui](https://docs.sui.io/guides/suiplay0x1/wallet-integration)
+
+## Setup Providers
+
+Wrap your app root (e.g., main.tsx) with QueryClientProvider, SuiClientProvider, and WalletProvider for hooks to access SuiClient and wallets.
+
+```typescript
+// main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getFullnodeUrl } from '@mysten/sui/client';
+import '@mysten/dapp-kit/dist/index.css';
+import App from './App';
+
+const queryClient = new QueryClient();
+const networks = {
+  testnet: { url: getFullnodeUrl('testnet') },
+  mainnet: { url: getFullnodeUrl('mainnet') },
+};
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networks} defaultNetwork="testnet">
+        <WalletProvider>
+          <App />
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
+);
+```
+
+
+## Wallet Detection & Connection
+
+Use `ConnectButton` for UI-driven multi-wallet modal; `useWallets()` lists available, `useConnectUI()` for programmatic switching. Auto-reconnect via WalletProvider persistence. [sdk.mystenlabs](https://sdk.mystenlabs.com/dapp-kit)
+
+```typescript
+// WalletConnect.tsx
+import { ConnectButton, useWallets, useConnectUI } from '@mysten/dapp-kit';
+
+export function WalletSection() {
+  const wallets = useWallets(); // Detects extensions/WalletConnect
+  const { connect } = useConnectUI();
+
+  return (
+    <div>
+      <ConnectButton /> {/* Modal with all wallets */}
+      {wallets.map((wallet) => (
+        <button key={wallet.name} onClick={() => connect(wallet)}>
+          Connect {wallet.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+## Transaction Signing
+
+Build with `Transaction`, sign via `useCurrentAccount().signAndExecuteTransaction({ transaction })`. Gas auto-estimates; handle UserRejectedError or InsufficientFundsError from `useSuiClient`. [docs.sui](https://docs.sui.io/guides/developer/sui-101/client-tssdk)
+
+```typescript
+// TxExample.tsx
+import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
+import { Transaction } from '@mysten/sui/transactions';
+import { UserRejectedError } from '@mysten/dapp-kit';
+
+export function SendSUI({ recipient, amount }: { recipient: string; amount: number }) {
+  const account = useCurrentAccount();
+  const client = useSuiClient();
+
+  const handleSend = async () => {
+    if (!account) return;
+    try {
+      const tx = new Transaction();
+      const [coin] = tx.splitCoins(tx.gas, [tx.pure(amount * 1e9)]);
+      tx.transferObjects([coin], recipient);
+      const result = await account.signAndExecuteTransaction({ transaction: tx });
+      console.log('Tx digest:', result.digest);
+    } catch (e) {
+      if (e instanceof UserRejectedError) {
+        console.log('User rejected');
+      } else if (e.message.includes('insufficient gas')) {
+        console.log('Insufficient funds');
+      }
+    }
+  };
+
+  return <button onClick={handleSend}>Send {amount} SUI</button>;
+}
+```
+
+
+## Advanced Patterns
+
+For context, wrap components in WalletProvider; use `useSuiClientQuery` for queries. Auto-reconnect handles session restore; customize themes via CSS vars. [sdk.mystenlabs](https://sdk.mystenlabs.com/dapp-kit)
+</file>
+
+<file path="plans/knowledge/Vite Configuration Deep Dive.md">
+Vite handles env vars with VITE_ prefix exposed client-side, loading .env → .env.local → .env.[mode] → .env.[mode].local (mode-specific overrides). Type-safe access via import.meta.env.VITE_FOO or ViteEnvs interface. Build auto tree-shakes ESM, splits routes/components dynamically. [vite](https://vite.dev/guide/env-and-mode)
+
+## Optimized vite.config.ts
+
+```typescript
+// vite.config.ts
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite'; // Tailwind v4+ plugin [web:118]
+import { VitePWA } from 'vite-plugin-pwa'; // PWA [web:113]
+import path from 'path';
+
+export default defineConfig(({ command, mode }) => {
+  // Load env vars
+  const env = loadEnv(mode, process.cwd(), ''); // '' exposes all VITE_*
+  return {
+    plugins: [
+      react({ 
+        babel: { plugins: [['@babel/plugin-transform-typescript'] ] } // TS opts
+      }),
+      tailwindcss(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        manifest: {
+          name: 'Walrus Starter Kit',
+          short_name: 'WalrusKit',
+          icons: [ /* array of sizes */ ],
+          theme_color: '#ffffff',
+          background_color: '#ffffff',
+        },
+      }),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+    build: {
+      target: 'esnext', // Modern browsers
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          pure_funcs: ['console.log'],
+        },
+      },
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'], // Vendor chunk
+            sui: ['@mysten/sui', '@mysten/walrus'], // Walrus deps
+          },
+          chunkFileNames: 'chunks/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js',
+        },
+      },
+      chunkSizeWarningLimit: 1000, // KB
+    },
+    server: {
+      port: 3000,
+      open: true,
+    },
+    envPrefix: 'VITE_', // Expose only VITE_*
+    define: {
+      // Type-safe env (in env.d.ts: interface ImportMetaEnv { 'VITE_WALRUS_RPC': string })
+      __WALRUS_RPC__: JSON.stringify(env.VITE_WALRUS_RPC),
+    },
+    css: {
+      postcss: {
+        plugins: [tailwindcss()], // Legacy Tailwind v3
+      },
+    },
+    optimizeDeps: {
+      include: ['@mysten/walrus'], // Pre-bundle heavy deps
+    },
+  };
+});
+```
+
+
+## Key Optimizations Explained
+
+- **Code Splitting**: manualChunks groups vendors/Walrus; dynamic imports for routes auto-split. [vite](https://vite.dev/guide/features)
+- **Tree-shaking**: ESM + terser compress removes dead code; drop_console in prod. [calpa](https://calpa.me/blog/frontend-performance-optimization-tree-shaking-bundle-analysis-code-splitting-in-vite/)
+- **Env Safety**: VITE_WALRUS_EPOCHS etc.; env.d.ts:
+  ```typescript
+  interface ImportMetaEnv {
+    readonly VITE_WALRUS_RPC: string;
+    readonly VITE_SUI_NETWORK: 'testnet' | 'mainnet';
+  }
+  ```
+  Access: `const rpc = import.meta.env.VITE_WALRUS_RPC`. [stackoverflow](https://stackoverflow.com/questions/74168587/how-to-use-an-env-variable-in-vite-with-typescript)
+- **Plugins**: @vitejs/plugin-react (TSX/JSX), @tailwindcss/vite (JIT), vite-plugin-pwa (offline). [davidschinteie.hashnode](https://davidschinteie.hashnode.dev/react-pwa-with-typescript-using-cra-or-vite)
+
+## Loading Order
+
+.env (all modes) ← .env.local (gitignored) ← .env.development/.env.production ← .env.[mode].local. Restart dev server on changes. [vite](https://vite.dev/guide/env-and-mode.md)
+</file>
+
+<file path="plans/knowledge/Walrus Epochs & Blob Lifecycle.md">
+Walrus blobs are stored for a prepaid number of epochs via WAL tokens, with Mainnet epochs lasting ~2 weeks (Testnet shorter, e.g., 2 days). Expiration frees resources automatically; deletable blobs allow early owner deletion, while non-deletable ensure full duration availability. Renewal via Sui tx updates storage resources, enabling indefinite storage through automation. [walrus](https://www.walrus.xyz/network-release-schedule)
+
+## Epochs Overview
+
+Sui epochs (~24h Devnet/Testnet, ~90 days Mainnet adjusted for Walrus ~2 weeks Mainnet) define storage contracts. Max upfront: ~2 years (104 Mainnet epochs). Costs: Stake-voted WAL price (e.g., ~1.3 WAL/1GiB/epoch via calculator); fixed per contract, trends downward. [tusky](https://tusky.io/blog/does-walrus-offer-permanent-storage)
+
+## Blob Lifecycle
+
+1. **Write**: Acquire storage resource on Sui, encode/upload slivers, certify PoA. [github](https://github.com/tusky-io/ts-sdk)
+2. **Store**: Nodes hold slivers (RedStuff erasure coding); quorum reads/writes ensure resilience.
+3. **Expire**: At epoch end, blob unavailable; storage rebate on Sui object burn (non-deletion). [docs.wal](https://docs.wal.app/docs/dev-guide/costs)
+4. **Delete**: Deletable blobs: Owner disassociates via tx (reuse space); non-deletable: No early delete. [tusky](https://tusky.io/blog/does-walrus-offer-permanent-storage)
+5. **GC**: Automatic on expiration/deletion; no manual GC needed.
+
+Permanence: Contractual till expiry; 1/3 node failure tolerance. [luganodes](https://www.luganodes.com/blog/walrus-decentralized-storage/)
+
+## Renewal Mechanisms
+
+Submit Sui tx to extend storage resource (add epochs, up to max). Automate via Move contracts for perpetual storage (pre-fund). [walrus](https://www.walrus.xyz/blog/how-walrus-blob-storage-works)
+
+## Recommendations
+
+| Use Case              | Epochs (Mainnet) | Duration (~2wk/epoch) | Notes |
+|-----------------------|------------------|-----------------------|-------|
+| Short-lived (cache)  | 1-4             | 2-8 weeks            | Deletable, low cost  [tusky](https://tusky.io/blog/does-walrus-offer-permanent-storage) |
+| Medium (assets)      | 26              | 1 year               | Non-deletable |
+| Long-term (archive)  | 52-104          | 2 years max upfront  | Auto-renew contracts  [walrus](https://www.walrus.xyz/blog/how-walrus-blob-storage-works) |
+| Permanent            | Indefinite      | Perpetual            | Smart contract automation  [tusky](https://tusky.io/blog/does-walrus-offer-permanent-storage) |
+
+## Best Practices
+
+- **Optimization**: Batch files into quilts; use relays for uploads; prepay max for cost locks. [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+- **Short vs Long**: Short: deletable for flexibility; long: non-deletable for proofs.
+- **Monitoring**: Query Sui object for expiry; use SDK `getBlobInfo` or explorers; alert pre-expiry. [docs.wal](https://docs.wal.app/docs/design/operations-sui)
+- **Costs**: Check https://costcalculator.wal.app; trade storage resources secondary market. [costcalculator.wal](https://costcalculator.wal.app)
+</file>
+
+<file path="plans/reports/docs-manager-260117-1536-tusky-removal.md">
+# Documentation Update Report: Tusky Removal & Mysten SDK Exclusive Use
+
+**Date:** 2026-01-17
+**Status:** Completed
+
+## Summary
+Updated all project documentation to reflect the removal of Tusky and the transition to exclusive use of the Mysten Labs TypeScript SDK (`@mysten/walrus`) for the Walrus Starter Kit MVP.
+
+## Changes Made
+
+### 1. Project Overview (`docs/project-overview-pdr.md`)
+- Removed references to `@tusky-io/ts-sdk` from functional requirements and SDK selection examples.
+- Simplified SDK selection to focus on `@mysten/walrus`.
+
+### 2. System Architecture (`docs/system-architecture.md`)
+- Replaced "Adapter Pattern" section with "Mysten Labs SDK Integration".
+- Specified that the SDK Layer now exclusively implements the Storage Adapter using `@mysten/walrus`.
+- Added justification for exclusive SDK choice (native compatibility, official support).
+
+### 3. Codebase Summary (`docs/codebase-summary.md`)
+- Updated "Target SDKs" to only list `@mysten/walrus`.
+
+### 4. Design Guidelines (`docs/design-guidelines.md`)
+- Removed Tusky from CLI SDK selection prompt examples.
+
+### 5. Project Roadmap (`docs/project-roadmap.md`)
+- Simplified Phase 4 (SDK Layer) by removing the requirement for "Alternative SDK adapters".
+
+## Unresolved Questions
+- Should we keep the "Adapter Pattern" nomenclature?
+    - *Decision:* Retained the interface pattern for internal decoupling, but removed the "multi-SDK" marketing/vision as per instructions.
+- Are there any other community SDKs (like `hibernuts`) that should also be removed?
+    - *Action:* Kept `hibernuts` in design guideline examples for now as it wasn't explicitly mentioned for removal, but focused the core architecture on Mysten Labs.
+
+## Next Steps
+- Ensure `packages/cli` implementation (Phase 2) reflects these documentation changes by limiting SDK selection options.
+- Update `templates/base` and `templates/sdk-mysten` (Phase 3 & 4) accordingly.
+</file>
+
+<file path="plans/reports/repomix-260117-1520-knowledge-base.md">
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+# File Summary
+
+## Purpose
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+## File Format
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  a. A header with the file path (## File: path/to/file)
+  b. The full contents of the file in a code block
+
+## Usage Guidelines
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+## Notes
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+
+# Directory Structure
+```
+Bundle Size Optimization.md
+Cross-Platform Path Handling.md
+Deep Merge Strategies for package.json.md
+E2E Testing Strategy.md
+File Gallery UX Patterns.md
+Multi-SDK API Comparison.md
+Network Endpoints & Configuration.md
+NFT Metadata Schema for Walrus.md
+React Hooks Patterns for Walrus.md
+Sui Wallet Integration Patterns.md
+```
+
+# Files
+
+## File: Bundle Size Optimization.md
+````markdown
+Vite enables tree-shaking for ESM packages like @mysten/walrus (use named imports e.g., { WalrusClient } to minimize); analyze with rollup-plugin-visualizer. Code split routes/components dynamically, lazy-load SDK on upload/download pages. Target gzipped totals: <100KB vendor, <50KB main, <200KB total interactive. [developerway](https://www.developerway.com/posts/bundle-size-investigation)
+
+## Optimization Checklist
+
+### SDK Tree-Shaking
+- ✅ Named imports: `import { WalrusClient } from '@mysten/walrus'` (no barrel `import *`). [developerway](https://www.developerway.com/posts/bundle-size-investigation)
+- ✅ Dynamic SDK: `const { WalrusClient } = await import('@mysten/walrus')` in upload modal.
+- ✅ Analyzer: Add to vite.config.ts:
+  ```typescript
+  import { visualizer } from 'rollup-plugin-visualizer';
+  plugins: [visualizer({ filename: './dist/report.html', gzipSize: true })]
+  ```
+  Run `vite build --mode production` → open report.html [dev](https://dev.to/werliton/analise-seu-app-como-um-heroi-benchmarking-com-vite-rollup-em-projetos-react-ak)
+
+### Code Splitting
+- ✅ Routes: `const UploadPage = lazy(() => import('./UploadPage'))` [github](https://github.com/vitejs/vite/discussions/17730)
+- ✅ Components: Lazy heavy charts/galleries.
+- ✅ manualChunks in vite.config.ts:
+  ```typescript
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          sui: ['@mysten/sui', '@mysten/walrus'], // ~150KB split
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
+  }
+  ```
+  Results: main.[hash].js <50KB, sui.[hash].js ~120KB gzipped [mykolaaleksandrov](https://www.mykolaaleksandrov.dev/posts/2025/10/react-lazy-suspense-vite-manualchunks/)
+
+### Monitoring & CI
+- ✅ vite-plugin-bundlesize: Enforce limits.
+  ```typescript
+  // vite.config.ts
+  import bundlesize from 'vite-plugin-bundlesize';
+  plugins: [bundlesize({
+    limits: [
+      { name: 'assets/index-*.js', limit: '50 kB' },
+      { name: 'assets/*', limit: '200 kB' },
+    ],
+  })]
+  ```
+  Fail build if exceeded [npmjs](https://npmjs.com/package/vite-plugin-bundlesize)
+- ✅ Bundlewatch CI: `npx bundlewatch --github-pull-request` (diff PR sizes).
+- ✅ Targets:
+  | Chunk       | Gzipped Target |
+  |-------------|----------------|
+  | main       | <50KB         |
+  | vendor     | <100KB        |
+  | sui/walrus | <150KB        |
+  | Total LCP  | <200KB        |
+
+## vite.config.ts Snippet
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+import bundlesize from 'vite-plugin-bundlesize';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    visualizer({ open: true, gzipSize: true }),
+    bundlesize({
+      limits: [{ name: '**/*', limit: '300 kB' }],
+    }),
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@mysten/walrus') || id.includes('@mysten/sui')) return 'sui';
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+    cssCodeSplit: true,
+  },
+});
+```
+Run `vite build && vite-bundle-analyzer` for viz [npmjs](https://www.npmjs.com/package/vite-bundle-analyzer)
+
+## Verification Commands
+
+- `npm run analyze` → View treemap.
+- Lighthouse: Aim PS75+ (bundle <170KB median).
+- Bundlephobia: Check deps individually. [frontendjoy](https://www.frontendjoy.com/p/how-i-reduced-my-react-bundle-size-by-30-with-real-examples)
+````
+
+## File: Cross-Platform Path Handling.md
+````markdown
+Node.js `path` module handles cross-platform paths automatically, using `/` on Unix/macOS and `\` on Windows. Always prefer `path.join()` and `path.resolve()` over string concatenation to avoid separator issues and traversal vulnerabilities. Validation prevents security risks like path traversal via `../` or Windows device names (e.g., CON). [stackoverflow](https://stackoverflow.com/questions/66042298/how-to-correctly-create-cross-platform-paths-with-nodejs)
+
+## Windows-Specific Handling
+
+Windows paths start with drive letters (C:\), use `\` separators, and hit 260-char MAX_PATH limit (use `\\?\` prefix or enable LongPathsEnabled registry). PowerShell/CMD handle native formats; WSL uses Unix-style but maps Windows drives (/mnt/c/). CLI tools must resolve relative paths with `path.resolve()` to get absolute, normalized forms. [github](https://github.com/ehmicky/cross-platform-node-guide/blob/main/docs/3_filesystem/file_paths.md)
+
+## Node.js Path API Usage
+
+- **path.join(...parts)**: Joins with platform separator, ignores non-strings (e.g., `path.join('foo', 'bar')` → 'foo/bar' Unix, 'foo\\bar' Windows). [nodejs](https://nodejs.org/api/path.html)
+- **path.resolve([from...], to)**: Makes absolute from cwd/from dirs (e.g., `path.resolve('..', 'file.txt')` resolves like `cd ..; cd file.txt; pwd`). [shapeshed](https://shapeshed.com/writing-cross-platform-node/)
+- **path.normalize(p)**: Collapses `..`/`./` but doesn't resolve to absolute (use after join for cleaning). [millermedeiros.github](https://millermedeiros.github.io/mdoc/examples/node_api/doc/path.html)
+- **Validation**: Check `path.isAbsolute()`; regex for safe paths: `^(?!.*[<>:"/\\|?*]|(?:^|[/\\])(\.\.|CON|PRN|AUX|NUL|COM\d+|LPT\d+)[/\\]?)[a-zA-Z0-9_./\\\-]+$` (blocks traversal, devices, invalid chars). [zeropath](https://zeropath.com/blog/cve-2025-27210-nodejs-path-traversal-windows)
+
+## Testing Strategies
+
+Test via CI matrix (GitHub Actions: ubuntu-latest/windows-latest/macos-latest) with vitest/jest spawning processes. Mock `process.platform` or use `path.win32`/`path.posix` for portable tests; verify with `fs.existsSync(resolvedPath)`. Pitfalls: unnormalized inputs, device name bypasses, long paths (>260 chars without prefix). [github](https://github.com/ehmicky/cross-platform-node-guide/blob/main/docs/3_filesystem/file_paths.md)
+
+## Code Examples
+
+```javascript
+const path = require('node:path');
+const fs = require('node:fs');
+
+// Safe join/resolve
+const safePath = path.resolve(path.join(baseDir, userInput));
+
+// Validate before use
+function validatePath(input) {
+  const normalized = path.normalize(input);
+  if (!path.isAbsolute(normalized) || /[<>"|?*\x00-\x1f]/.test(normalized) ||
+      /^(?:CON|PRN|AUX|NUL|COM\d+|LPT\d+)/i.test(normalized.replace(/\\/g, '/'))) {
+    throw new Error('Invalid path');
+  }
+  return normalized;
+}
+```
+
+**Test Cases** (use in CI):
+
+| Input                  | Platform | Expected Output (resolve from /home/test) | Valid? |
+|------------------------|----------|-------------------------------------------|--------|
+| '../foo/bar.txt'      | Unix    | /home/foo/bar.txt                        | Yes   |
+| '..\\foo\\bar.txt'    | Windows | C:\foo\bar.txt (from C:\home\test)       | Yes   |
+| 'CON\\..\\etc\\passwd'| Windows | Invalid (blocked)                        | No    |
+| '/very/long/path...'  | Windows | \\?\C:\very\long... (260+ chars)         | Check len |
+| './../..'             | All     | / (root)                                 | Yes   |  [stackoverflow](https://stackoverflow.com/questions/66042298/how-to-correctly-create-cross-platform-paths-with-nodejs)
+````
+
+## File: Deep Merge Strategies for package.json.md
+````markdown
+Research robust package.json deep merge strategies for CLI scaffolding:
+
+1. Existing solutions:
+   - lodash.merge vs deepmerge library
+   - Custom implementations (create-next-app, create-vite)
+   - Pros/cons of each approach
+
+2. Conflict resolution:
+   - Dependency version conflicts (^1.0.0 vs ^2.0.0)
+   - Script name collisions
+   - Config field merging (engines, browserslist)
+
+3. Edge cases:
+   - Nested object merging
+   - Array handling (replace vs concat)
+   - Peer dependency warnings
+
+Output: Recommended merge algorithm with implementation examples.
+
+Work context: d:\Sui\walrus-starter-kit
+Reports: d:\Sui\walrus-starter-kit\plans\reports\
+Web Search Prompts:
+
+
+"package.json deep merge cli scaffolding"
+"create-next-app package.json merge strategy"
+"lodash merge vs deepmerge npm"
+"dependency version conflict resolution"
+````
+
+## File: E2E Testing Strategy.md
+````markdown
+E2E testing for CLI scaffolders uses Jest with mock-fs for filesystem isolation, inquirer mocking for prompts, and snapshots for generated code diffs. Verify projects by running npm install/build/test/lint in temp dirs. GitHub Actions matrix ensures cross-OS compatibility. [stackoverflow](https://stackoverflow.com/questions/58413428/jest-mocking-and-testing-the-node-js-filesystem)
+
+## Testing Frameworks
+
+- **Jest**: Snapshots compare generated dirs/files; `--updateSnapshot` for regen.
+- **Prompt Mocking**: `jest.mock('inquirer')`; mock stdin/stdout.
+- **FS Mocking**: mock-fs simulates dir structure; restore post-test. [github](https://github.com/tschaub/mock-fs)
+
+**CLI Test Example**:
+```typescript
+// cli.test.ts
+import { execSync } from 'child_process';
+import mock from 'mock-fs';
+import path from 'path';
+import fs from 'fs';
+
+jest.mock('inquirer', () => ({
+  prompt: () => Promise.resolve({ projectName: 'test-app', features: ['walrus'] }),
+}));
+
+describe('CLI scaffolding', () => {
+  const projectDir = './generated-app';
+
+  beforeEach(() => {
+    mock({}); // Clean FS
+  });
+
+  afterEach(() => mock.restore());
+
+  it('generates Walrus starter kit', async () => {
+    execSync('node bin/cli.js init test-app --features walrus', { cwd: './', stdio: 'pipe' });
+    const files = fs.readdirSync(projectDir);
+    expect(files).toContain('package.json');
+    expect(fs.readFileSync(path.join(projectDir, 'vite.config.ts'), 'utf8')).toMatchSnapshot();
+  });
+});
+```
+
+## Generated Project Verification
+
+Spawn subprocesses in generated dir:
+
+```typescript
+// verifyProject.ts
+import { execSync } from 'child_process';
+import path from 'path';
+
+function verifyProject(dir: string) {
+  const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+  expect(pkg.dependencies['@mysten/walrus']).toBeDefined();
+
+  execSync('npm install', { cwd: dir });
+  execSync('npm run build', { cwd: dir, timeout: 30000 }); // Build check
+  execSync('npm run lint', { cwd: dir }); // ESLint
+  execSync('tsc --noEmit', { cwd: dir }); // Type check
+  execSync('npm test', { cwd: dir }); // Units
+}
+```
+
+
+## CI/CD Configuration
+
+GitHub Actions matrix for OS/Node; test multiple templates.
+
+```yaml
+# .github/workflows/e2e.yml
+name: E2E CLI Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+        node: [18, 20, 22]
+        include:
+          - os: ubuntu-latest
+            template: walrus-basic
+          - os: windows-latest
+            template: walrus-nft
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:e2e # jest --runInBand (serial for FS)
+        env:
+          CI: true
+      - name: Performance Benchmark
+        run: |
+          npm run bench:scaffold # Time init
+        if: matrix.os == 'ubuntu-latest'
+```
+Matrix parallelizes (3 OS x 3 Node x 2 templates); use artifacts for failed dirs. [blacksmith](https://www.blacksmith.sh/blog/matrix-builds-with-github-actions)
+
+## Best Practices
+
+- Run serially (`--runInBand`) for FS conflicts.
+- Update snapshots selectively.
+- Mock global deps (e.g., npm exec).
+- Benchmark scaffold time <5s.
+- Separate smoke tests for quick CI feedback. [jestjs](https://jestjs.io/docs/snapshot-testing)
+````
+
+## File: File Gallery UX Patterns.md
+````markdown
+File galleries persist metadata (blobId, thumbnailUrl, name, size, uploadDate) in IndexedDB for large blobs/binary data, syncing via Walrus/Sui onchain for ownership. Use react-window for virtual scrolling, Canvas API for thumbnails, and react-dropzone for drag-drop. Infinite scroll outperforms pagination for galleries; optimize with WebP/AVIF via browser APIs. [github](https://github.com/bvaughn/react-window)
+
+## Persistence Schema
+
+IndexedDB stores blobs efficiently (~50% disk); LocalStorage limited to strings (~5MB).
+
+| Storage     | Pros                          | Cons                       | Use Case                  |
+|-------------|-------------------------------|----------------------------|---------------------------|
+| IndexedDB  | Async, blobs/objects, indexed | Complex API               | Metadata + thumbnails  [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5) |
+| LocalStorage | Sync, simple                 | Strings only, small quota | User prefs (view/sort)  [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5) |
+
+**Schema Example** (idb-keyval or Dexie.js):
+```javascript
+// Schema: { blobs: [{ id: 'blobId', name: 'file.jpg', thumbnail: blobUrl, size: 1024, date: Date.now(), tags: [] }] }
+```
+
+Sync: Poll Sui object or use RPC subscriptions for updates. [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5)
+
+## Performance Techniques
+
+- **Virtual Scrolling**: react-window/VirtualList for 10k+ items (render viewport only). [web](https://web.dev/articles/virtualize-long-lists-react-window)
+- **Thumbnails**: Canvas resize (100x100px) on upload; store as blob URL. [youtube](https://www.youtube.com/watch?v=5Vro146pDa0)
+- **Lazy Loading**: `loading="lazy"` + IntersectionObserver; use react-intersection-observer. [digitalocean](https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash)
+- **Optimization**: Canvas toBlob('image/webp'); compress via browser-image-resizer.
+
+**Thumbnail Gen**:
+```typescript
+function generateThumbnail(file: File): Promise<string> {
+  return new Promise((res) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    canvas.width = 200; canvas.height = 200;
+    const ctx = canvas.getContext('2d')!;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 200, 200);
+      canvas.toBlob((blob) => res(URL.createObjectURL(blob!)), 'image/webp');
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+```
+
+## UX Patterns & Libraries
+
+- **Views**: Masonry grid (react-masonry-css) > list; toggle via state.
+- **Scroll**: Infinite (react-infinite-scroll-component) with IntersectionObserver. [digitalocean](https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash)
+- **Search/Filter**: Fuse.js on metadata.
+- **Drag-Drop**: react-dropzone.
+
+**Library Recs**:
+| Category       | Libs                          | Why |
+|----------------|-------------------------------|-----|
+| Virtual List  | react-window, virtua         | High perf  [github](https://github.com/bvaughn/react-window) |
+| Infinite Scroll | react-infinite-scroll-component | Easy Unsplash-like  [digitalocean](https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash) |
+| Gallery UI    | react-image-gallery, lightGallery | Thumbs/zoom  [github](https://github.com/brillout/awesome-react-components) |
+| Drop Upload   | react-dropzone               | Drag-drop |
+| IndexedDB     | Dexie.js, idb-keyval         | Typed schema  [dev](https://dev.to/tene/localstorage-vs-indexeddb-javascript-guide-storage-limits-best-practices-fl5) |
+
+**Gallery Example** (react-window + infinite):
+```typescript
+import { FixedSizeGrid as Grid } from 'react-window';
+import InfiniteLoader from 'react-window-infinite-loader';
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+function Gallery({ items }) {
+  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({ /* Walrus list query */ });
+  const itemCount = data?.pages.reduce((acc, page) => acc + page.blobs.length, 0) ?? 0;
+
+  return (
+    <InfiniteLoader isItemLoaded={() => true} itemCount={itemCount} loadMoreItems={fetchNextPage} />
+    {({ onItemsRendered, ref }) => (
+      <Grid columnCount={4} columnWidth={250} height={800} rowCount={Math.ceil(itemCount/4)} rowHeight={250} ref={ref} onItemsRendered={onItemsRendered}>
+        {({ columnIndex, rowIndex, style }) => {
+          const idx = rowIndex * 4 + columnIndex;
+          const item = data.pages.flatMap(p => p.blobs)[idx];
+          return <div style={style}><img src={item.thumbnail} loading="lazy" /></div>;
+        }}
+      </Grid>
+    )}
+  );
+}
+```
+````
+
+## File: Multi-SDK API Comparison.md
+````markdown
+The Walrus SDKs differ significantly in design, with @mysten/walrus as the low-level official library for direct blob/quilt operations on Sui testnet/mainnet, while @tusky-io/ts-sdk and @hibernuts/walrus-sdk provide higher-level file system abstractions (Tusky adds E2E encryption and vaults; Hibernuts adds folders/collaboration). No direct comparisons exist, but npm data shows low adoption for alternatives. [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+
+## Compatibility Matrix
+
+| Feature/Method          | @mysten/walrus (Official)  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | @tusky-io/ts-sdk  [github](https://github.com/tusky-io/ts-sdk) | @hibernuts/walrus-sdk  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+|-------------------------|-----------------------------------------------------|----------------------------------|---------------------------------------|
+| Upload (files/blobs)   | `writeFiles(files[], epochs, signer)` or `writeBlob(blob, epochs, signer)`; supports WalrusFile from Uint8Array/Blob/string; browser flow via `writeFilesFlow()` (encode/register/upload/certify)  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | `file.upload(vaultId, path)` (returns uploadId); vault.create() first; supports File-like  [github](https://github.com/tusky-io/ts-sdk) | `uploadFile(file: File, filepath)` or `storeBlob(data: string/Buffer, epochs)`  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+| Download (files/blobs) | `getFiles(ids[])` → WalrusFile (bytes/text/json); `readBlob(blobId)` → Uint8Array  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | `file.arrayBuffer/get(uploadId)` → buffer/metadata; `file.listAll()`  [github](https://github.com/tusky-io/ts-sdk) | `getBlob(blobId)` → Buffer  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+| List/Directory         | Via `blob.files({identifiers/tags/ids})` on quilts  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | `file.listAll()`; vault-based  [github](https://github.com/tusky-io/ts-sdk) | `getFolderContents(folderId)`; `getAllUserFiles()`; `getTreeStructure(path)`  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+| Delete/Deletable       | `deletable: true` param on write  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) | Not exposed in core API  [github](https://github.com/tusky-io/ts-sdk) | `deleteNode(id)`  [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk) |
+
+## Authentication Patterns
+
+@mysten/walrus requires Sui signer (e.g., keypair/Ed25519Keypair) for on-chain txns (SUI/WAL fees); optional uploadRelay with tip. @tusky-io/ts-sdk uses API key, Sui wallet (signPersonalMessage + account), or keypair with `auth.signIn()`; password/self-hosted keys for encryption. @hibernuts/walrus-sdk initializes with aggregator/publisher/apiUrl (no explicit auth shown; likely backend-dependent). [github](https://github.com/tusky-io/ts-sdk)
+
+## Environment Support
+
+All support TypeScript and Node.js (requires SuiClient for official); browser needs special handling. @mysten/walrus: WASM config for Vite/Next.js, browser popup flows. @tusky-io/ts-sdk: Separate `/web` import; Sui dapp-kit integration. @hibernuts/walrus-sdk: File/Buffer support implies browser/Node. [docs.tusky](https://docs.tusky.io/http-api)
+
+## Other Aspects
+
+- **TS Quality**: All TypeScript-native; official has full TypeDocs. Alternatives under active dev (Tusky: 194 releases to May 2025; disclaimer on audits/changes). [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+- **Bundle Sizes**: Not specified; official includes WASM (~heavy for direct node interaction). [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus)
+- **Installation**: `npm i @mysten/walrus @mysten/sui`; `npm i @tusky-io/ts-sdk`; `npm i @hibernuts/walrus-sdk`. [docs.tusky](https://docs.tusky.io/http-api)
+- **Breaking Changes**: Official stable; Tusky frequent (194 releases, API iteration warning); Hibernuts v1.0.1 (9mo old). [npmjs](https://www.npmjs.com/package/@hibernuts/walrus-sdk)
+- **Adoption**: Official tied to Mysten/Sui ecosystem (high indirect use); alternatives low/no dependents, few GitHub stars (Tusky:18), no weekly download stats available. [github](https://github.com/tusky-io/ts-sdk)
+````
+
+## File: Network Endpoints & Configuration.md
+````markdown
+Walrus operates on Mainnet (live since March 2025 with 100+ nodes), Testnet, and Devnet, using decentralized aggregators for reads and publishers for writes. Production favors Mainnet with multiple public endpoints for redundancy; self-hosting recommended for high-volume use. Costs involve WAL/SUI for storage epochs, no fixed quotas but publisher limits apply. [docs.wal](https://docs.wal.app/docs/usage/web-api)
+
+## Environment Endpoints
+
+Use these public URLs; SDK auto-configures Testnet, override for others.
+
+| Network | Aggregator (Read)  [docs.wal](https://docs.wal.app/docs/usage/web-api) | Publisher (Write)  [docs.wal](https://docs.wal.app/docs/usage/web-api) | Notes |
+|---------|--------------------------------------------|------------------------------------|-------|
+| Mainnet | aggregator.walrus-mainnet.walrus.space<br>mainnet-walrus-aggregator.kiliglab.io<br>mainnet-aggregator.walrus.graphyte.dev<br>walrus-aggregator.stakin-nodes.com<br>walrus-aggregator-mainnet.chainode.tech<br>walrus-mainnet-aggregator.stakecraft.com<br>walrus-cache-mainnet.latitude.sh<br>walrus.prostaking.com | Run self-hosted or relays; no central public listed  [docs.wal](https://docs.wal.app/blog/06_mainnet.html) | 100+ nodes; global regions (APAC/EU/US/LATAM); WALCDN routes optimally  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) |
+| Testnet | aggregator.walrus-testnet.walrus.space  [docs.wal](https://docs.wal.app/docs/usage/web-api) | publisher.walrus-testnet.walrus.space  [docs.wal](https://docs.wal.app/docs/usage/web-api) | SDK defaults  [sdk.mystenlabs](https://sdk.mystenlabs.com/walrus) |
+| Devnet  | aggregator-devnet.walrus.space<br>publisher-devnet.walrus.space  [github](https://github.com/Mr-Sunglasses/walrus-mcp) | As above  [github](https://github.com/Mr-Sunglasses/walrus-mcp) | System object: 0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f19c35b5ca709e1a6991e90dc  [github](https://github.com/Mr-Sunglasses/walrus-mcp) |
+
+## Rate Limits & Quotas
+
+Public publishers enforce defaults; self-host to customize. [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+
+- **Blob Size**: Max ~13.6 GiB per blob. [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+- **HTTP Upload**: Default 10 MiB (--max-body-size); quilts 100 MiB (--max-quilt-body-size). [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+- **Concurrency**: Tune --n-clients, --max-concurrent-requests (default low). [walrus.peera](https://walrus.peera.ai/es/experts/3-0x230af8f15641f3cd3b3bd801edd5a607ab025ae88c3ff32e8f14b7dc9fb18d91/how-to-upload-large-files-to-walrus-without-speed-issues)
+- **No Hard Rates**: Throttling via public aggregator/publisher policies; auth/JWT for Mainnet publishers. [docs.wal](https://docs.wal.app/blog/06_mainnet.html)
+- **Costs**: WAL for storage epochs (stake-voted pricing), SUI gas; prepay per epoch. [insights.blockbase](https://insights.blockbase.co/walrus-protocol-a-comprehensive-overview/)
+
+## Stability & Best Practices
+
+Mainnet offers production-grade decentralization with no formal uptime SLA, but 100+ nodes ensure redundancy. Use multiple aggregators (e.g., WalrusCDN auto-routes by latency/region); fallback via SDK retries. Self-run daemon/publisher for control (health endpoint available); monitor metrics/logs. [docs.wal](https://docs.wal.app/docs/operator-guide/aggregator)
+````
+
+## File: NFT Metadata Schema for Walrus.md
+````markdown
+Sui NFTs embed metadata directly in objects (name, description, url fields) following Suiet standard, with Walrus blobIds referenced as "walrus://{blobId}?tags=..." or HTTP gateways like walrus.site/{blobId}. No native IPFS support, but HTTP/IPFS gateways render images in wallets/explorers. Minting uploads assets to Walrus, stores JSON metadata as blob, then creates owned NFT object linking to it. [std.suiet](https://std.suiet.app/nft/)
+
+## Minting Flow
+
+1. **Upload Image**: Walrus → imageBlobId.
+2. **Metadata JSON**: `{name, description, image: "walrus://{imageBlobId}", attributes: [...]} → metaBlobId`.
+3. **Mint NFT**: Move tx creates NFT object with url: metaBlobId (wallets fetch/parse). [docs.sui](https://docs.sui.io/guides/developer/advanced/custom-indexer/indexer-walrus)
+
+## Frontend Code (React + @mysten/walrus)
+
+```typescript
+// MintNFT.tsx
+import { useWalrusUpload } from './useWalrus'; // From prior hooks
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { Transaction } from '@mysten/sui/transactions';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'; // Or wallet signer
+
+async function mintNFT(imageFile: File, metadata: {name: string; description: string; attributes: string[][]}) {
+  const account = useCurrentAccount()!;
+  const { upload } = useWalrusUpload(52); // 1yr
+  const client = useSuiClient();
+
+  // 1. Upload image
+  await upload([imageFile]);
+  const imageBlobId = '...'; // From result
+
+  // 2. Create/upload metadata JSON
+  const metaJson = {
+    name: metadata.name,
+    description: metadata.description,
+    image: `walrus://${imageBlobId}`, // Standard ref [web:127]
+    attributes: { traits: metadata.attributes },
+  };
+  const metaBlob = new Blob([JSON.stringify(metaJson)], { type: 'application/json' });
+  const { blobId: metaBlobId } = await upload([metaBlob]);
+
+  // 3. Mint tx (using NFT module, e.g., your package)
+  const tx = new Transaction();
+  const [nft] = tx.moveCall({
+    target: `${PACKAGE_ID}::nft::mint_to_sender`,
+    arguments: [
+      tx.pure(metadata.name),
+      tx.pure(metadata.description),
+      tx.pure(`walrus://${metaBlobId}`), // NFT url points to metadata blob
+    ],
+  });
+  await account.signAndExecuteTransaction({ transaction: tx });
+}
+```
+
+
+## Move Contract Example
+
+Standard Sui NFT (key, store abilities); display via url field.
+
+```move
+// sources/nft.move
+module walrus_starter::nft {
+    use sui::object::{Self, UID, ID};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+    use sui::url::{Self, Url};
+    use std::string;
+
+    public struct NFT has key, store {
+        id: UID,
+        name: string::String,
+        description: string::String,
+        url: Url, // "walrus://{metaBlobId}"
+    }
+
+    public fun mint(
+        name: vector<u8>,
+        description: vector<u8>,
+        url_str: vector<u8>, // Pass metaBlobId as "walrus://..."
+        ctx: &mut TxContext
+    ) {
+        let nft = NFT {
+            id: object::new(ctx),
+            name: string::utf8(name),
+            description: string::utf8(description),
+            url: url::new_unsafe_from_bytes(url_str),
+        };
+        transfer::public_transfer(nft, tx_context::sender(ctx));
+    }
+
+    public fun url(nft: &NFT): &Url { &nft.url }
+    public fun name(nft: &NFT): &string::String { &nft.name }
+}
+```
+Publish, call `mint` entrypoint. [docs.sui](https://docs.sui.io/guides/developer/nft)
+
+## Best Practices
+
+- **Dynamic Fields**: Add attributes as dynamic_object fields for composability.
+- **Collection**: Mint collection NFT first; link via collection_id.
+- **Walrus Sites**: Host metadata viewer at walrus.site/{metaBlobId} for rich display. [stakin](https://stakin.com/blog/how-to-build-your-own-walrus-site)
+- **Standards**: Suiet/SuiNS compatibility; test rendering in Suiet Wallet. [std.suiet](https://std.suiet.app/nft/)
+````
+
+## File: React Hooks Patterns for Walrus.md
+````markdown
+React hooks for Walrus integrate with @mysten/walrus and @mysten/dapp-kit, using useSuiClientQuery for metadata and custom logic for upload/download with progress. Zustand suits queue/state management over Context for scalability; Suspense enables lazy blob loading via throw promise patterns. These patterns ensure optimistic UI, error resilience, and concurrent fetches. [github](https://github.com/bezkoder/react-typescript-file-upload)
+
+## Core Hooks Design
+
+```typescript
+// hooks/useWalrus.ts
+import { useMemo, useState, useCallback } from 'react';
+import { WalrusClient } from '@mysten/walrus';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+// Global upload queue store (Zustand)
+interface QueueItem { id: string; file: File; progress: number; status: 'pending'|'uploading'|'done'|'error'; blobId?: string; }
+interface QueueStore { queue: QueueItem[]; add: (item: Omit<QueueItem,'id'>) => void; update: (id: string, updates: Partial<QueueItem>) => void; }
+export const useQueueStore = create<QueueStore>()(
+  devtools(persist((set, get) => ({
+    queue: [],
+    add: (item) => set({ queue: [...get().queue, { ...item, id: crypto.randomUUID(), progress: 0, status: 'pending' }] }),
+    update: (id, updates) => set({ queue: get().queue.map(q => q.id === id ? { ...q, ...updates } : q) }),
+  }), { name: 'walrus-queue' }))
+);
+
+// useWalrusUpload: Progress-tracked upload
+export function useWalrusUpload(epochs: number = 4) {
+  const client = useSuiClient();
+  const [uploading, setUploading] = useState(false);
+  const addToQueue = useQueueStore(s => s.add);
+  const updateQueue = useQueueStore(s => s.update);
+
+  const upload = useCallback(async (files: File[], signer?: any) => {
+    const walrus = await WalrusClient.fromClient(client, { signer });
+    setUploading(true);
+    const promises = files.map(async (file) => {
+      const id = crypto.randomUUID();
+      addToQueue({ file, progress: 0, status: 'uploading' });
+      try {
+        // Simulate progress; use walrus.writeFiles with relay
+        const result = await walrus.writeFiles([{ contents: file }], { epochs });
+        updateQueue(id, { progress: 100, status: 'done', blobId: result.blobId });
+      } catch (e) {
+        updateQueue(id, { status: 'error' });
+      }
+    });
+    await Promise.all(promises);
+    setUploading(false);
+  }, [client, epochs]);
+
+  return { upload, uploading, queue: useQueueStore(s => s.queue) };
+}
+
+// useWalrusDownload: Cached fetch
+export function useWalrusDownload(blobId: string | null) {
+  const client = useSuiClient();
+  const [data, setData] = useState<Uint8Array | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const download = useCallback(async () => {
+    if (!blobId) return;
+    setLoading(true);
+    const walrus = await WalrusClient.fromClient(client);
+    const blob = await walrus.readBlob(blobId);
+    setData(blob);
+    setLoading(false);
+  }, [blobId, client]);
+
+  return { data, loading, download };
+}
+
+// useWalrusMetadata: Query hook
+import { useSuiClientQuery } from '@mysten/dapp-kit';
+export function useWalrusMetadata(blobId: string) {
+  return useSuiClientQuery({
+    method: 'suix_getObject', // Or custom Walrus query
+    params: [blobId],
+    options: { enabled: !!blobId, staleTime: 5 * 60 * 1000 },
+  });
+}
+```
+
+
+## State & Queue Management
+
+Use Zustand for queue (add/update items); pair with TanStack Query for metadata. Error boundaries wrap uploads:
+
+```typescript
+// ErrorBoundary.tsx
+import { Component, ReactNode } from 'react';
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() { return this.state.hasError ? <div>Upload failed</div> : this.props.children; }
+}
+```
+Zustand > Context for non-render-blocking updates. [reddit](https://www.reddit.com/r/react/comments/1fp27ek/state_management_when_to_use_context_api_vs_redux/)
+
+## Suspense & Optimistic Patterns
+
+Wrap downloads in Suspense for lazy loading; throw promises for concurrent fetches.
+
+```typescript
+// BlobViewer.tsx (Suspense-enabled)
+let cache = new Map();
+async function fetchBlob(blobId: string) {
+  if (cache.has(blobId)) return cache.get(blobId);
+  const promise = (async () => {
+    const walrus = await WalrusClient.load(/*...*/);
+    const data = await walrus.readBlob(blobId);
+    cache.set(blobId, data);
+    return data;
+  })();
+  cache.set(blobId, promise);
+  return promise;
+}
+
+function BlobViewer({ blobId }: { blobId: string }) {
+  throw fetchBlob(blobId); // Suspends
+}
+
+<Suspense fallback={<div>Loading blob...</div>}>
+  <BlobViewer blobId={blobId} />
+</Suspense>
+```
+Optimistic: Update queue to 'uploading' pre-call, rollback on error. [17.reactjs](https://17.reactjs.org/docs/concurrent-mode-suspense.html)
+````
+
+## File: Sui Wallet Integration Patterns.md
+````markdown
+Sui Wallet integration in browser DApps uses the @mysten/dapp-kit for React hooks and UI components supporting all Sui wallets via adapters, including browser extensions like Sui Wallet and Suiet. WalletConnect v2 enables mobile/browser bridging; multi-wallet selectors auto-detect via window.sui. Transactions use TransactionBlock from @mysten/sui.js with automatic gas estimation and signing. [docs.sui](https://docs.sui.io/guides/suiplay0x1/wallet-integration)
+
+## Setup Providers
+
+Wrap your app root (e.g., main.tsx) with QueryClientProvider, SuiClientProvider, and WalletProvider for hooks to access SuiClient and wallets.
+
+```typescript
+// main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getFullnodeUrl } from '@mysten/sui/client';
+import '@mysten/dapp-kit/dist/index.css';
+import App from './App';
+
+const queryClient = new QueryClient();
+const networks = {
+  testnet: { url: getFullnodeUrl('testnet') },
+  mainnet: { url: getFullnodeUrl('mainnet') },
+};
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networks} defaultNetwork="testnet">
+        <WalletProvider>
+          <App />
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
+);
+```
+
+
+## Wallet Detection & Connection
+
+Use `ConnectButton` for UI-driven multi-wallet modal; `useWallets()` lists available, `useConnectUI()` for programmatic switching. Auto-reconnect via WalletProvider persistence. [sdk.mystenlabs](https://sdk.mystenlabs.com/dapp-kit)
+
+```typescript
+// WalletConnect.tsx
+import { ConnectButton, useWallets, useConnectUI } from '@mysten/dapp-kit';
+
+export function WalletSection() {
+  const wallets = useWallets(); // Detects extensions/WalletConnect
+  const { connect } = useConnectUI();
+
+  return (
+    <div>
+      <ConnectButton /> {/* Modal with all wallets */}
+      {wallets.map((wallet) => (
+        <button key={wallet.name} onClick={() => connect(wallet)}>
+          Connect {wallet.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+## Transaction Signing
+
+Build with `Transaction`, sign via `useCurrentAccount().signAndExecuteTransaction({ transaction })`. Gas auto-estimates; handle UserRejectedError or InsufficientFundsError from `useSuiClient`. [docs.sui](https://docs.sui.io/guides/developer/sui-101/client-tssdk)
+
+```typescript
+// TxExample.tsx
+import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
+import { Transaction } from '@mysten/sui/transactions';
+import { UserRejectedError } from '@mysten/dapp-kit';
+
+export function SendSUI({ recipient, amount }: { recipient: string; amount: number }) {
+  const account = useCurrentAccount();
+  const client = useSuiClient();
+
+  const handleSend = async () => {
+    if (!account) return;
+    try {
+      const tx = new Transaction();
+      const [coin] = tx.splitCoins(tx.gas, [tx.pure(amount * 1e9)]);
+      tx.transferObjects([coin], recipient);
+      const result = await account.signAndExecuteTransaction({ transaction: tx });
+      console.log('Tx digest:', result.digest);
+    } catch (e) {
+      if (e instanceof UserRejectedError) {
+        console.log('User rejected');
+      } else if (e.message.includes('insufficient gas')) {
+        console.log('Insufficient funds');
+      }
+    }
+  };
+
+  return <button onClick={handleSend}>Send {amount} SUI</button>;
+}
+```
+
+
+## Advanced Patterns
+
+For context, wrap components in WalletProvider; use `useSuiClientQuery` for queries. Auto-reconnect handles session restore; customize themes via CSS vars. [sdk.mystenlabs](https://sdk.mystenlabs.com/dapp-kit)
+````
+</file>
+
+<file path=".env.example">
+## REQUIRED - Walrus Network
+VITE_WALRUS_NETWORK=testnet
+VITE_WALRUS_AGGREGATOR=https://aggregator.testnet.walrus.space/v1
+
+## REQUIRED - Sui RPC (for wallet)
+VITE_SUI_RPC=https://fullnode.testnet.sui.io:443
+
+## OPTIONAL - Analytics
+VITE_BLOCKBERRY_KEY=
+</file>
 
 <file path=".eslintrc.json">
 {
@@ -199,6 +1969,103 @@ engine-strict=true
   "printWidth": 80,
   "tabWidth": 2
 }
+</file>
+
+<file path="docs/code-standards.md">
+# Code Standards & Structure
+
+This document outlines the coding standards and structural conventions for the Walrus Starter Kit.
+
+## 1. General Principles
+
+- **TypeScript First:** All code must be written in TypeScript with strict type checking.
+- **ES Modules (ESM):** The project uses ESM (`"type": "module"`) throughout.
+- **KISS/DRY:** Keep it simple, but avoid unnecessary repetition in template layers.
+- **Functional Patterns:** Prefer functional components and hooks in React templates.
+
+## 2. Directory Conventions
+
+- `src/`: Source code.
+- `dist/`: Compiled output (git ignored).
+- `tests/`: Unit and integration tests.
+- `templates/`: Static assets and code fragments for the generator.
+
+## 3. CLI Standards (packages/cli)
+
+- **Command Handling:** Use `commander.js` for argument parsing.
+- **User Input:** Use `prompts` for interactive sessions.
+- **Styling:** Use `kleur` for terminal coloring. No heavy dependencies like `chalk` or `picocolors`.
+- **File Ops:** Use `fs-extra` for robust filesystem operations.
+- **Error Handling:** Always wrap async operations in try-catch and provide actionable error messages with emojis (❌, ⚠️).
+
+## 4. Template Standards (templates/)
+
+- **Modular package.json:** Template layers should only contain the dependencies specific to that layer.
+- **Adapter Pattern:** SDK layers must implement the storage adapter interface (e.g., `StorageAdapter`) defined in the base layer.
+- **Environment Variables:** Use `VITE_` prefix (e.g., `VITE_WALRUS_NETWORK`) for variables intended for the frontend.
+- **Consistency:** Use camelCase for file names in templates unless framework conventions dictate otherwise (e.g., PascalCase for React components).
+
+## 5. Formatting & Linting
+
+- **Prettier:** Standard configuration enforced via `.prettierrc.json`.
+- **ESLint:** Strict rules for TypeScript, enforced via `.eslintrc.json`.
+- **Scripts:**
+    - `pnpm lint`: Run ESLint across the workspace.
+    - `pnpm format`: Run Prettier to fix formatting.
+
+## 6. Versioning
+
+- Follow [Semantic Versioning (SemVer)](https://semver.org/).
+- Pin critical dependencies in templates to ensure stability (e.g., `"@mysten/walrus": "1.0.0"`).
+```
+</file>
+
+<file path="docs/codebase-summary.md">
+# Codebase Summary
+
+**Project:** Walrus Starter Kit
+**Generated:** 2026-01-17
+**Status:** Phase 1 (Monorepo Foundation) Complete
+
+## 1. Overview
+The Walrus Starter Kit is a monorepo containing a CLI tool (`create-walrus-app`) and modular templates for building Walrus applications on Sui. It uses a layered template system to allow mixing and matching SDKs, frameworks, and use cases.
+
+## 2. Directory Structure
+
+- `/packages/cli`: The core CLI engine.
+    - `src/index.ts`: Entry point for the CLI.
+    - `tsconfig.json`: CLI-specific TypeScript config.
+- `/templates`: (In Progress) Modular layers for project generation.
+    - `base/`: Common configs and interfaces.
+- `/docs`: Project documentation and design guidelines.
+- `/plans`: Implementation phases and research reports.
+- `/examples`: (Future) Target for generated test outputs.
+
+## 3. Key Components
+
+### CLI Engine (`packages/cli`)
+Built with `commander` and `prompts`. It implements the logic for selecting template layers and merging them into a final project.
+
+### Root Configuration
+- `pnpm-workspace.yaml`: Defines the workspace members.
+- `package.json`: Contains workspace-wide scripts for building, linting, and formatting.
+- `tsconfig.json`: Base TypeScript configuration.
+- `.eslintrc.json` & `.prettierrc.json`: Linting and formatting standards.
+
+## 4. Current Progress
+- ✅ Monorepo structure established.
+- ✅ Root dependencies and scripts configured.
+- ✅ CLI package initialized with core dependencies.
+- ✅ Design system and guidelines documented.
+- 🏗️ CLI interactive logic (Phase 2) is next.
+
+## 5. Technology Stack
+- **Language:** TypeScript
+- **Package Manager:** pnpm
+- **CLI Libraries:** commander, prompts, kleur, fs-extra
+- **Frameworks (Target):** React, Vue
+- **SDKs (Target):** @mysten/walrus
+```
 </file>
 
 <file path="docs/design-guidelines.md">
@@ -390,7 +2257,6 @@ font-weight: 400 (Regular);
 
 ? Select SDK:
 ❯ @mysten/walrus (Official - Recommended)
-  @tusky-io/ts-sdk
   @hibernuts/walrus-sdk
 ```
 
@@ -1118,6 +2984,71 @@ All design decisions documented. Developers can start implementation immediately
 **End of Design Phase Report**
 </file>
 
+<file path="docs/project-overview-pdr.md">
+# Project Overview & PDR (Product Development Requirements)
+
+**Project Name:** Walrus Starter Kit
+**CLI Tool:** `create-walrus-app`
+**Version:** 0.1.0
+**Status:** In Development (Phase 1 Complete)
+
+## 1. Executive Summary
+
+Walrus Starter Kit is a production-grade interactive CLI tool designed to simplify the development of applications on the Walrus Protocol (Sui blockchain). It provides a modular scaffolding system using a **Base + Layer + Adapter Pattern**, allowing developers to choose from various SDKs, frameworks, and use cases.
+
+## 2. Product Vision
+
+The goal is to provide the "create-next-app" experience for the Walrus ecosystem.
+
+- **Interactive Wizard:** A 6-step CLI flow to configure the project.
+- **Modular Architecture:** Deep merging of templates (Base + SDK + Framework + Use Case).
+- **SDK Agnostic:** Use case logic works across different Walrus SDKs via an Adapter Pattern.
+- **Production Ready:** Includes best practices for styling (Tailwind), linting, and TypeScript.
+
+## 3. Target Audience
+
+- **Frontend DApp Developers:** Primarily React/TS developers looking to integrate Walrus storage.
+- **Full-Stack Developers:** Building dashboards and backends that interact with Walrus.
+- **Protocol Explorers:** Developers wanting to quickly prototype with different Walrus SDKs.
+
+## 4. Key Requirements (PDR)
+
+### 4.1 Functional Requirements
+
+- **Interactive CLI:**
+    1. Project name selection.
+    2. SDK selection (e.g., `@mysten/walrus`).
+    3. Framework selection (e.g., React, Vue, Plain TS).
+    4. Use Case selection (e.g., Simple Upload, File Gallery, DeFi/NFT).
+    5. Optional features (Tailwind CSS, Analytics).
+- **Template Generation:**
+    - Deep merge `package.json` dependencies and scripts.
+    - Resolve conflicts in configuration files (tsconfig, etc.).
+    - Maintain a compatibility matrix between SDKs and frameworks.
+- **Post-Install Automation:**
+    - Automatic dependency installation (detecting pnpm, npm, yarn).
+    - Basic project validation after scaffolding.
+
+### 4.2 Non-Functional Requirements
+
+- **Performance:** CLI should be fast and lightweight.
+- **Reliability:** Validated template combinations to ensure "zero broken templates".
+- **Extensibility:** Easy to add new SDKs or frameworks as layers.
+- **UX/UI:** Follows "Arctic Shipyard" design language for CLI and "Deep Ocean Glass" for templates.
+
+## 5. Technical Constraints
+
+- **Node.js:** >= 18.0.0
+- **Package Manager:** pnpm >= 9.0.0 (for monorepo management)
+- **Language:** TypeScript for all core components and templates.
+
+## 6. Success Metrics
+
+- Successful scaffolding of all 18+ possible template combinations.
+- Adoption by the Sui/Walrus developer community.
+- Positive feedback on the developer experience (DX).
+</file>
+
 <file path="docs/project-roadmap.md">
 # Project Roadmap - Walrus Starter Kit
 
@@ -1153,7 +3084,6 @@ All design decisions documented. Developers can start implementation immediately
 
 ### Phase 4: SDK Layer (PENDING)
 - [ ] @mysten/walrus implementation
-- [ ] Alternative SDK adapters
 - [ ] SDK-specific dependencies
 
 ### Phase 5: Framework Layer (PENDING)
@@ -1194,6 +3124,76 @@ All design decisions documented. Developers can start implementation immediately
 - `packages/cli` package skeleton with build system
 - Project implementation plans and PRD documentation
 - Project roadmap and changelog tracking
+</file>
+
+<file path="docs/system-architecture.md">
+# System Architecture
+
+**Walrus Starter Kit** uses a modular, layered architecture to provide a flexible and robust scaffolding experience.
+
+## 1. Monorepo Structure
+
+The project is managed as a pnpm monorepo:
+
+```
+walrus-starter-kit/
+├── packages/
+│   └── cli/                 # Scaffolder Engine (create-walrus-app)
+├── templates/               # Modular Template Layers (Excluded from workspace)
+│   ├── base/                # Layer 1: Core config & Adapter interface
+│   ├── sdk-*/               # Layer 2: SDK-specific implementations
+│   ├── framework-*/         # Layer 3: UI Framework (React, Vue, etc.)
+│   └── use-case-*/          # Layer 4: Feature-specific code
+├── examples/                # Generated test outputs (Excluded from workspace)
+└── docs/                    # Technical Documentation
+```
+
+## 2. Scaffolding Engine (CLI)
+
+The `packages/cli` engine is responsible for:
+- **Interaction:** Using `commander` and `prompts` for the user wizard.
+- **Validation:** Checking the compatibility matrix (SDK vs Framework).
+- **Composition:** Assembling the final project by merging template layers.
+- **Deep Merging:** Intelligent merging of `package.json` and JSON configs to prevent overrides.
+- **Post-Install:** Handling `pnpm install` and initial sanity checks.
+
+## 3. Template Layering Pattern
+
+We use a **Base + Layer + Adapter Pattern**:
+
+1.  **Base Layer:** Contains common files (`.gitignore`, `.env.example`, `tsconfig.json`) and the **Storage Adapter Interface**.
+2.  **SDK Layer:** Implements the Storage Adapter using the Mysten Labs TypeScript SDK (`@mysten/walrus`).
+3.  **Framework Layer:** Sets up the UI environment (Vite, React, Tailwind).
+4.  **Use Case Layer:** High-level features (Gallery, Upload UI) that consume the Storage Adapter.
+
+## 4. Mysten Labs SDK Integration
+
+The project exclusively uses the Mysten Labs TypeScript SDK for interacting with the Walrus Protocol. This ensures:
+- Native compatibility with Sui blockchain standards.
+- Direct access to official Walrus storage features.
+- Long-term support and alignment with Mysten Labs ecosystem updates.
+
+### Storage Adapter
+
+To ensure use cases are decoupled from the SDK implementation details, we define a standard interface in the base layer:
+
+```typescript
+// Example Interface
+export interface StorageAdapter {
+  upload(file: File): Promise<string>;
+  download(blobId: string): Promise<Blob>;
+}
+```
+
+The SDK layer provides the implementation of this interface using `@mysten/walrus`.
+
+## 5. Technology Stack
+
+- **Runtime:** Node.js (ESM)
+- **Tooling:** pnpm, TypeScript, ESLint, Prettier
+- **CLI Libs:** `commander`, `prompts`, `kleur`, `fs-extra`
+- **Build:** `tsc` (TypeScript Compiler)
+```
 </file>
 
 <file path="docs/wireframes/cli-output.html">

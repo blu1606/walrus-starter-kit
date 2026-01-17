@@ -41,5 +41,5 @@ Built with `commander` and `prompts`. It implements the logic for selecting temp
 - **Package Manager:** pnpm
 - **CLI Libraries:** commander, prompts, kleur, fs-extra
 - **Frameworks (Target):** React, Vue
-- **SDKs (Target):** @mysten/walrus, @tusky-io/ts-sdk
+- **SDKs (Target):** @mysten/walrus
 ```

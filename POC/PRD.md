@@ -107,9 +107,9 @@ Tertiary (5%): CLI Tool Devs
 
 ```
 1. Project name (default: my-walrus-app)
-2. SDK (3 validated):
-   @mysten/walrus / @tusky-io/ts-sdk / @hibernuts/walrus-sdk
-3. Framework (SDK-validated):
+3. SDK (Official):
+   @mysten/walrus (Official SDK)
+4. Framework (SDK-validated):
    React+Vite / Vue+Vite / Plain TS
 4. Use Case (3):
    Simple Upload / File Gallery / DeFi/NFT Metadata
@@ -120,11 +120,11 @@ Tertiary (5%): CLI Tool Devs
 ### **Template Generation Matrix** (18 Valid)
 
 ```
-3 SDKs × 3 Frameworks × 2 Use Cases = 18 combinations
+1 SDK × 3 Frameworks × 2 Use Cases = 6 combinations
 (DeFi limited to React/TS for MVP)
 ```
 
-**Modular Dirs:** 10 total (Base + Layers)
+**Modular Dirs:** 8 total (Base + Layers)
 
 ---
 
@@ -145,12 +145,12 @@ walrus-starter-kit/
 │      commander@11 prompts@2.4 kleur@4 fs-extra@11
 │      deepmerge@4 sort-package-json@2
 
-├── templates/                         # 10 Modular Dirs
+├── templates/                         # 8 Modular Dirs
 │   ├── base/                       # Layer 1 (1)
 │   │   ├── src/useStorage.ts      # Adapter interface
 │   │   ├── tsconfig.json
 │   │   └── package.json (core)
-│   ├── sdk-mysten/ sdk-tusky/ sdk-hibernuts/  # Layer 2 (3)
+│   ├── sdk-mysten/                 # Layer 2 (1)
 │   ├── react/ vue/ plain-ts/       # Layer 3 (3)
 │   └── simple-upload/ gallery/ defi-nft/       # Layer 4 (3)
 
@@ -175,15 +175,8 @@ export const useStorage: StorageAdapter = {
   }
 };
 
-// sdk-tusky/src/index.ts
-export const useStorage: StorageAdapter = {
-  async upload(file) {
-    return Tusky.file.upload(file);  // Tusky API
-  }
-};
-
 // simple-upload/src/App.tsx
-const { upload } = useStorage();  // Works for ALL SDKs!
+const { upload } = useStorage();  // Works for Mysten SDK!
 ```
 
 ### **Deep JSON Merge** (Critical Fix)
@@ -209,8 +202,6 @@ fs.writeFileSync(
 ```typescript
 const MATRIX = {
   '@mysten/walrus': ['react', 'vue', 'plain-ts'],
-  '@tusky-io/ts-sdk': ['react', 'vue', 'plain-ts'],
-  '@hibernuts/walrus-sdk': ['react', 'vue', 'plain-ts'],
 };
 
 function validate(sdk, framework) {
@@ -234,7 +225,7 @@ function validate(sdk, framework) {
 ✅ Post-install (npm i + check)
 ```
 
-### **Templates** (30h, 10 Modular Dirs)
+### **Templates** (30h, 8 Modular Dirs)
 
 ```
 Layer 1 BASE (5h):
@@ -242,10 +233,8 @@ Layer 1 BASE (5h):
 ├── tsconfig.json / .env.example
 ├── base package.json
 
-Layer 2 SDKs (12h):
+Layer 2 SDK (12h):
 ├── @mysten/walrus^1.0.0 (✅ pinned)
-├── @tusky-io/ts-sdk^0.1.0 (✅ verified)
-├── @hibernuts/walrus-sdk^1.0.1 (✅ verified)
 
 Layer 3 Frameworks (8h):
 ├── react+vite^18.2.0^5.0.0
@@ -271,8 +260,6 @@ Blockberry service (embed optional):
 ```json
 {
   "@mysten/walrus": "^1.0.0",
-  "@tusky-io/ts-sdk": "^0.1.0",
-  "@hibernuts/walrus-sdk": "^1.0.1",
   "@mysten/sui": "^1.10.0",
   "react": "^18.2.0",
   "vite": "^5.0.0",
@@ -331,9 +318,8 @@ Days 1-2 (16h): CLI Engine + Base
 ├── Base layer + adapter interface
 └── Deep merge implementation
 
-Days 3-4 (16h): SDK Layers
+Days 3-4 (16h): SDK Layer
 ├── mysten (primary)
-├── tusky + hibernuts
 └── Matrix testing
 
 Days 5-6 (16h): Framework + Use Cases

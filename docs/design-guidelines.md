@@ -186,7 +186,6 @@ font-weight: 400 (Regular);
 
 ? Select SDK:
 ❯ @mysten/walrus (Official - Recommended)
-  @tusky-io/ts-sdk
   @hibernuts/walrus-sdk
 ```
 

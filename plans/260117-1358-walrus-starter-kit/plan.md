@@ -18,11 +18,11 @@ created: 2026-01-17
 
 ## MVP Scope
 
-**1 SDK × 1 Framework × 3 Use Cases** (expandable to 3×3×3)
+**1 SDK × 3 Frameworks × 2 Use Cases** (6 template combinations)
 
 - **Primary SDK:** @mysten/walrus (testnet stable)
-- **Primary Framework:** React + Vite
-- **Use Cases:** Simple Upload, File Gallery, DeFi/NFT Metadata
+- **Frameworks:** React + Vite, Vue + Vite, Plain TypeScript
+- **Use Cases:** Simple Upload, File Gallery
 
 ## Critical Success Factors
 

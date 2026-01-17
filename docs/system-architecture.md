@@ -33,13 +33,20 @@ The `packages/cli` engine is responsible for:
 We use a **Base + Layer + Adapter Pattern**:
 
 1.  **Base Layer:** Contains common files (`.gitignore`, `.env.example`, `tsconfig.json`) and the **Storage Adapter Interface**.
-2.  **SDK Layer:** Implements the Storage Adapter for a specific SDK (e.g., `@mysten/walrus`).
+2.  **SDK Layer:** Implements the Storage Adapter using the Mysten Labs TypeScript SDK (`@mysten/walrus`).
 3.  **Framework Layer:** Sets up the UI environment (Vite, React, Tailwind).
 4.  **Use Case Layer:** High-level features (Gallery, Upload UI) that consume the Storage Adapter.
 
-## 4. Adapter Pattern
+## 4. Mysten Labs SDK Integration
 
-To ensure use cases are SDK-agnostic, we define a standard interface in the base layer:
+The project exclusively uses the Mysten Labs TypeScript SDK for interacting with the Walrus Protocol. This ensures:
+- Native compatibility with Sui blockchain standards.
+- Direct access to official Walrus storage features.
+- Long-term support and alignment with Mysten Labs ecosystem updates.
+
+### Storage Adapter
+
+To ensure use cases are decoupled from the SDK implementation details, we define a standard interface in the base layer:
 
 ```typescript
 // Example Interface
@@ -49,7 +56,7 @@ export interface StorageAdapter {
 }
 ```
 
-Each SDK layer provides its own implementation of this interface, allowing the Use Case layer to remain identical regardless of the chosen SDK.
+The SDK layer provides the implementation of this interface using `@mysten/walrus`.
 
 ## 5. Technology Stack
 

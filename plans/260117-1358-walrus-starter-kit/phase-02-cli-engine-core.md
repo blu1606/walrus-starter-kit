@@ -115,8 +115,6 @@ export async function runPrompts(initialContext: Partial<Context>) {
       message: 'Choose SDK:',
       choices: [
         { title: '@mysten/walrus', value: 'mysten' },
-        { title: '@tusky-io/ts-sdk', value: 'tusky' },
-        { title: '@hibernuts/walrus-sdk', value: 'hibernuts' },
       ],
     },
     // ... more prompts
@@ -156,9 +154,9 @@ export function validateContext(context: Context): ValidationResult {
 export interface Context {
   projectName: string;
   projectPath: string;
-  sdk: 'mysten' | 'tusky' | 'hibernuts';
+  sdk: 'mysten';
   framework: 'react' | 'vue' | 'plain-ts';
-  useCase: 'simple-upload' | 'gallery' | 'defi-nft';
+  useCase: 'simple-upload' | 'gallery';
   analytics: boolean;
   tailwind: boolean;
   packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun';
@@ -226,9 +224,9 @@ cd packages/cli && pnpm install
 3. Create `src/types.ts`:
 
 ```typescript
-export type SDK = 'mysten' | 'tusky' | 'hibernuts';
+export type SDK = 'mysten';
 export type Framework = 'react' | 'vue' | 'plain-ts';
-export type UseCase = 'simple-upload' | 'gallery' | 'defi-nft';
+export type UseCase = 'simple-upload' | 'gallery';
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
 export interface Context {
@@ -257,15 +255,7 @@ export interface ValidationResult {
 export const COMPATIBILITY_MATRIX = {
   mysten: {
     frameworks: ['react', 'vue', 'plain-ts'],
-    useCases: ['simple-upload', 'gallery', 'defi-nft'],
-  },
-  tusky: {
-    frameworks: ['react', 'vue', 'plain-ts'],
     useCases: ['simple-upload', 'gallery'],
-  },
-  hibernuts: {
-    frameworks: ['react', 'plain-ts'],
-    useCases: ['simple-upload'],
   },
 } as const;
 
@@ -274,16 +264,6 @@ export const SDK_METADATA = {
     name: '@mysten/walrus',
     description: 'Official Mysten Labs SDK (Testnet stable)',
     docs: 'https://docs.walrus.site',
-  },
-  tusky: {
-    name: '@tusky-io/ts-sdk',
-    description: 'Community TypeScript SDK',
-    docs: 'https://github.com/tusky-io',
-  },
-  hibernuts: {
-    name: '@hibernuts/walrus-sdk',
-    description: 'Alternative Walrus SDK',
-    docs: 'https://github.com/hibernuts',
   },
 } as const;
 ```
@@ -394,14 +374,6 @@ export async function runPrompts(
         {
           title: `${SDK_METADATA.mysten.name} - ${SDK_METADATA.mysten.description}`,
           value: 'mysten',
-        },
-        {
-          title: `${SDK_METADATA.tusky.name} - ${SDK_METADATA.tusky.description}`,
-          value: 'tusky',
-        },
-        {
-          title: `${SDK_METADATA.hibernuts.name} - ${SDK_METADATA.hibernuts.description}`,
-          value: 'hibernuts',
         },
       ],
       initial: 0,
@@ -525,11 +497,11 @@ program
   .description('Interactive CLI for scaffolding Walrus applications')
   .version(packageJson.version)
   .argument('[project-name]', 'Project directory name')
-  .option('--sdk <sdk>', 'SDK to use (mysten | tusky | hibernuts)')
+  .option('--sdk <sdk>', 'SDK to use (mysten)')
   .option('--framework <framework>', 'Framework (react | vue | plain-ts)')
   .option(
     '--use-case <use-case>',
-    'Use case (simple-upload | gallery | defi-nft)'
+    'Use case (simple-upload | gallery)'
   )
   .option('--analytics', 'Include Blockberry analytics', false)
   .option('--no-tailwind', 'Exclude Tailwind CSS')

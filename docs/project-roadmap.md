@@ -32,7 +32,6 @@
 
 ### Phase 4: SDK Layer (PENDING)
 - [ ] @mysten/walrus implementation
-- [ ] Alternative SDK adapters
 - [ ] SDK-specific dependencies
 
 ### Phase 5: Framework Layer (PENDING)
