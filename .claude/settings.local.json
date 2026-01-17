@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm -r exec tsc:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx -y tsx:*)",
+      "Bash(echo:*)",
+      "Bash(chmod:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm test)",
+      "Bash(./node_modules/.bin/vitest run:*)",
+      "Bash(tee:*)"
+    ]
+  }
+}
