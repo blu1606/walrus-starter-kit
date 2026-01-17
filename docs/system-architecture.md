@@ -241,7 +241,13 @@ export interface StorageAdapter {
 
 **Implemented Adapters:**
 
-- **sdk-mysten** (`templates/sdk-mysten/src/adapter.ts`): WalrusStorageAdapter using @mysten/walrus SDK with singleton client pattern.
+- **sdk-mysten** (`templates/sdk-mysten/src/adapter.ts`):
+  - MystenStorageAdapter using @mysten/walrus SDK v0.9.0
+  - Singleton client pattern via `getWalrusClient()`
+  - Object-based API parameters (`{ blob, nEpochs, signer }`)
+  - V1 metadata structure with validation
+  - **Signer Required:** Upload throws error if `options.signer` not provided
+  - Accepts `WalletAccount` from `@mysten/dapp-kit` as signer (cast to `any` for compatibility)
 
 ## 6. React Framework Layer Architecture
 
@@ -305,25 +311,32 @@ The framework uses a layered provider pattern for dependency injection:
 
 ### 6.3 Custom Hooks API
 
+**Storage Adapter Hook (`useStorageAdapter.ts`):**
+
+HOC hook that injects wallet signer into storage operations. Upload requires connected wallet; read operations work without wallet.
+
+```typescript
+const adapter = useStorageAdapter();
+// Returns adapter with currentAccount auto-injected as signer
+```
+
 **Storage Hooks (`useStorage.ts`):**
 
 ```typescript
-// Upload mutation
+// Upload mutation (requires wallet connection)
 const upload = useUpload();
 upload.mutate({ file: File, options?: UploadOptions });
 
-// Download query
+// Download query (no wallet required)
 const { data: blob } = useDownload(blobId);
 
-// Metadata query
+// Metadata query (no wallet required)
 const { data: metadata } = useMetadata(blobId);
 ```
 
-**Wallet Hook (`useWallet.ts`):**
+**Wallet Integration:**
 
-```typescript
-const { account, isConnected, address, signAndExecute } = useWallet();
-```
+Uses `@mysten/dapp-kit` `useCurrentAccount()` to inject wallet as signer. All storage hooks internally use `useStorageAdapter` to ensure authenticated uploads.
 
 All hooks use TanStack Query for caching, deduplication, and error handling.
 
@@ -383,19 +396,37 @@ All hooks use TanStack Query for caching, deduplication, and error handling.
 The React layer imports from base/SDK layers:
 
 ```typescript
-// hooks/useStorage.ts
+// hooks/useStorageAdapter.ts
 import { storageAdapter } from '../index.js'; // From SDK layer
 import type { UploadOptions } from '../adapters/storage.js'; // From base layer
+import { useCurrentAccount } from '@mysten/dapp-kit'; // Wallet integration
+
+// hooks/useStorage.ts
+import { useStorageAdapter } from './useStorageAdapter.js'; // HOC hook
 
 // providers/WalletProvider.tsx
 import { loadEnv } from '../utils/env.js'; // From base layer
 ```
 
-Hooks wrap `storageAdapter` methods in TanStack Query primitives:
+**Wallet-Aware Adapter Pattern (HOC Hook):**
 
-- `useUpload()` → `useMutation` → `storageAdapter.upload()`
-- `useDownload()` → `useQuery` → `storageAdapter.download()`
-- `useMetadata()` → `useQuery` → `storageAdapter.getMetadata()`
+```
+React Layer (useCurrentAccount) → currentAccount
+    ↓
+React Layer (useStorageAdapter) → Inject currentAccount as signer
+    ↓
+React Layer (useStorage hooks) → Use wallet-aware adapter
+    ↓
+SDK Layer (adapter.ts) → Receive signer via options
+    ↓
+Walrus SDK (writeBlob) → Use signer for on-chain transaction
+```
+
+Hooks wrap wallet-aware `storageAdapter` in TanStack Query primitives:
+
+- `useUpload()` → `useMutation` → `useStorageAdapter().upload()` (wallet required)
+- `useDownload()` → `useQuery` → `useStorageAdapter().download()` (no wallet)
+- `useMetadata()` → `useQuery` → `useStorageAdapter().getMetadata()` (no wallet)
 
 ## 7. Technology Stack
 

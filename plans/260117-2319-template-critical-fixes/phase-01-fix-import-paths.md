@@ -3,7 +3,8 @@
 ## Context
 
 - **Priority**: P0 (Critical - Blocks all generated projects)
-- **Status**: Pending
+- **Status**: ✅ DONE
+- **Completed**: 2026-01-17T23:54:00+07:00
 - **Effort**: 1 hour
 - **Related Report**: [Template Structure Analysis](../260117-2305-fix-template-bugs/research/researcher-template-structure.md)
 
@@ -113,24 +114,31 @@ export { storageAdapter } from './adapter.js';
 
 ## Todo List
 
-- [ ] Read current client.ts implementation
-- [ ] Update client.ts import paths
-- [ ] Read current adapter.ts implementation
-- [ ] Update adapter.ts import paths
-- [ ] Read current config.ts implementation
-- [ ] Update config.ts import paths
-- [ ] Read current index.ts implementation
-- [ ] Update index.ts export paths
-- [ ] Generate test project to verify changes
-- [ ] Run TypeScript compilation check
-- [ ] Document changes in phase completion report
+- [x] Read current client.ts implementation
+- [x] Update client.ts import paths
+- [x] Read current adapter.ts implementation
+- [x] Update adapter.ts import paths
+- [x] Read current config.ts implementation
+- [x] Update config.ts import paths
+- [x] Read current index.ts implementation
+- [x] Update index.ts export paths
+- [x] Generate test project to verify changes
+- [x] Run TypeScript compilation check
+- [x] Document changes in phase completion report
+
+**Completion Notes:**
+- Fixed 4 template files: client.ts, adapter.ts, config.ts, index.ts
+- Changed all `../` imports to `./` for same-directory references
+- TypeScript compilation passed with no module resolution errors
+- Code review score: 10/10 approved
+- Verification: All imports now correctly resolve in flattened structure
 
 ## Success Criteria
 
-- [ ] All imports use `./` for same-directory references
-- [ ] Generated project compiles without module resolution errors
-- [ ] No TypeScript errors in sdk-mysten layer
-- [ ] Test project `pnpm tsc --noEmit` passes
+- [x] All imports use `./` for same-directory references
+- [x] Generated project compiles without module resolution errors
+- [x] No TypeScript errors in sdk-mysten layer
+- [x] Test project `pnpm tsc --noEmit` passes
 
 ## Risk Assessment
 

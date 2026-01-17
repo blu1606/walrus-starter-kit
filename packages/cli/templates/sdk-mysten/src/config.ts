@@ -1,4 +1,4 @@
-import type { WalrusNetwork } from '../types/walrus.js';
+import type { WalrusNetwork } from './types/walrus.js';
 
 export interface MystenWalrusConfig {
   network: WalrusNetwork;

@@ -18,6 +18,8 @@ export interface UploadOptions {
   epochs?: number;
   /** MIME type of the content */
   contentType?: string;
+  /** Signer for on-chain blob registration (SDK v0.9.0+) */
+  signer?: any; // TODO: Type properly in Phase 4 with wallet integration
 }
 
 export interface DownloadOptions {

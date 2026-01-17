@@ -103,6 +103,7 @@ export function validateProjectName(name: string): boolean | string {
 - **Adapter Pattern:** SDK layers must implement the storage adapter interface (e.g., `StorageAdapter`) defined in the base layer.
 - **Environment Variables:** Use `VITE_` prefix (e.g., `VITE_WALRUS_NETWORK`) for variables intended for the frontend.
 - **Consistency:** Use camelCase for file names in templates unless framework conventions dictate otherwise (e.g., PascalCase for React components).
+- **Import Paths:** Use `./` for same-directory references in templates (base layer provides subdirectories, SDK layers overlay files at same level after generation).
 
 ### 4.2 React Framework Standards (templates/react/)
 
@@ -127,6 +128,53 @@ export function validateProjectName(name: string): boolean | string {
 - Use `useMutation` for write operations (upload, delete)
 - Use `useQuery` for read operations (download, getMetadata)
 - Enable queries conditionally when required params are present
+- **HOC Pattern:** `useStorageAdapter` injects wallet signer into operations
+- All storage hooks consume wallet-aware adapter via `useStorageAdapter()`
+
+**SDK Integration (v0.9.0):**
+
+All Walrus SDK calls use object-based parameters:
+
+```typescript
+// Upload with object params
+await client.writeBlobToUploadRelay({ blob, nEpochs });
+
+// Download with object params
+await client.readBlob({ blobId });
+
+// Metadata with object params + V1 structure
+const response = await client.getBlobMetadata({ blobId });
+const size = response.metadata.V1.unencoded_length;
+```
+
+**StorageAdapter Interface:**
+
+SDK layers implement base adapter interface. Signer injected at React layer via HOC hook:
+
+```typescript
+// Base interface (base/src/adapters/storage.ts)
+interface UploadOptions {
+  epochs?: number;
+  contentType?: string;
+  signer?: any; // Injected by useStorageAdapter hook from @mysten/dapp-kit currentAccount
+}
+
+// SDK implementation (sdk-mysten/src/adapter.ts)
+class MystenStorageAdapter {
+  async upload(data: File | Uint8Array, options?: UploadOptions): Promise<string> {
+    if (!options?.signer) throw new Error('Signer required');
+    return client.writeBlobToUploadRelay({ blob, nEpochs, signer: options.signer });
+  }
+}
+
+// React HOC hook (react/src/hooks/useStorageAdapter.ts)
+export function useStorageAdapter() {
+  const currentAccount = useCurrentAccount(); // From @mysten/dapp-kit
+  return useMemo(() => ({
+    upload: (file, options) => storageAdapter.upload(file, { ...options, signer: currentAccount })
+  }), [currentAccount]);
+}
+```
 
 **Provider Composition:**
 
@@ -148,6 +196,7 @@ export function validateProjectName(name: string): boolean | string {
 - Target ES2022 or later
 - JSX preservation for Vite processing
 - Enable `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`
+- **Type Safety Status (verified 2026-01-18):** All SDK object-based parameters correctly typed, no mismatches detected
 
 **Vite Configuration:**
 

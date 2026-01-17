@@ -92,6 +92,8 @@ Storage operations abstracted via interface, SDK layers implement concrete adapt
 
 ## 5. SDK Layer (@mysten/walrus)
 
+**Location:** `packages/cli/templates/sdk-mysten/`
+
 **Structure:**
 
 - `src/config.ts` - Network configs (testnet/devnet), singleton WalrusClient instance
@@ -107,6 +109,14 @@ Storage operations abstracted via interface, SDK layers implement concrete adapt
 - Network configuration with testnet/devnet presets
 - Implements base StorageAdapter (upload/download/delete/getInfo)
 - Extends base types with SDK-specific metadata
+
+**Template Layering System:**
+
+- Base layer provides subdirectories (utils/, types/, adapters/)
+- SDK layer overlays files at src/ root level
+- After generation, all imports use `./` for same-directory references
+- Import pattern: `import { loadEnv } from './utils/env.js'` (NOT `../utils/env.js`)
+- This ensures TypeScript resolution works after template flattening
 
 ## 6. React Framework Layer
 

@@ -8,4 +8,4 @@ export type {
   BlobMetadata,
   UploadOptions,
   DownloadOptions,
-} from '../adapters/storage.js';
+} from './adapters/storage.js';
