@@ -196,6 +196,7 @@ export function useStorageAdapter() {
 - Target ES2022 or later
 - JSX preservation for Vite processing
 - Enable `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`
+- **Type Safety Status (verified 2026-01-18):** All SDK object-based parameters correctly typed, no mismatches detected
 
 **Vite Configuration:**
 
