@@ -1,6 +1,11 @@
 import fs from 'fs-extra';
 import path from 'node:path';
 
+export interface EnvCopyResult {
+  created: boolean;
+  reason?: 'no-source' | 'already-exists';
+}
+
 /**
  * Recursively copy directory, excluding certain files
  */
@@ -47,4 +52,28 @@ export async function isDirectoryEmpty(dir: string): Promise<boolean> {
  */
 export async function ensureDirectory(dir: string): Promise<void> {
   await fs.ensureDir(dir);
+}
+
+/**
+ * Copy .env.example to .env if it doesn't exist
+ */
+export async function copyEnvFile(targetDir: string): Promise<EnvCopyResult> {
+  const envExamplePath = path.join(targetDir, '.env.example');
+  const envPath = path.join(targetDir, '.env');
+
+  // Check if .env.example exists
+  const hasExample = await fs.pathExists(envExamplePath);
+  if (!hasExample) {
+    return { created: false, reason: 'no-source' };
+  }
+
+  // Check if .env already exists
+  const hasEnv = await fs.pathExists(envPath);
+  if (hasEnv) {
+    return { created: false, reason: 'already-exists' };
+  }
+
+  // Copy file
+  await fs.copy(envExamplePath, envPath);
+  return { created: true };
 }

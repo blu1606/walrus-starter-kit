@@ -102,6 +102,16 @@
 
 ## 📝 Changelog
 
+### [0.1.1] - 2026-01-18
+
+#### Added
+
+- **Auto .env creation (Phase 1/5)** - Added function to copy `.env.example` to `.env`
+  - Implementation in `packages/cli/src/generator/file-ops.ts`
+  - Added `EnvCopyResult` interface for result reporting
+  - Handles edge cases: missing source or existing target
+  - **Completed:** 2026-01-18T01:52:00+07:00
+
 ### [0.1.0] - 2026-01-17
 
 #### Fixed

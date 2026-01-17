@@ -17,7 +17,7 @@ The Walrus Starter Kit is a monorepo containing a CLI tool (`create-walrus-app`)
     - `layers.ts`: Resolves and validates template layers based on context.
     - `merge.ts`: Intelligent merging of `package.json` using `sort-package-json`.
     - `transform.ts`: Variable replacement in template files (e.g., `{{projectName}}`).
-    - `file-ops.ts`: Low-level file system operations with safety checks.
+    - `file-ops.ts`: Low-level file system operations with safety checks (copy, empty check, ensure dir, env copy).
     - `types.ts`: Generator-specific type definitions.
   - `src/post-install/`: Post-install automation and validation.
     - `index.ts`: Main orchestrator for dependency install, git init, and validation.

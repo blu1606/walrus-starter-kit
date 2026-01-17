@@ -24,7 +24,7 @@ This document outlines the coding standards and structural conventions for the W
 - **Interactive Prompts:** Use `prompts` for wizard-style user input with dynamic choices.
 - **Hybrid Mode:** Support both interactive mode (no flags) and CI/CD mode (all flags provided).
 - **Terminal Output:** Use `kleur` for colored console messages (lightweight, zero dependencies).
-- **File Operations:** Use `fs-extra` for cross-platform filesystem operations.
+- **File Operations:** Use `fs-extra` for cross-platform filesystem operations. Use utility functions in `generator/file-ops.ts` for common tasks like directory copying and environment file setup.
 - **Subprocesses:** Use `cross-spawn` for running external commands (npm, git) to ensure compatibility across platforms (Windows/Linux/macOS).
 
 ### 3.2 Error Handling
