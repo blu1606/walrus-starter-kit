@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnpm-debug.log
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Test
+coverage/
+.nyc_output/
+
+# Test projects (created during development)
+my-app/
+my-test-app/
+pkg-test/
+test-*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local

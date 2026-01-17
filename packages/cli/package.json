@@ -1,6 +1,6 @@
 {
   "name": "@blu1606/create-walrus-app",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Interactive CLI for scaffolding Walrus applications",
   "type": "module",
   "bin": {
