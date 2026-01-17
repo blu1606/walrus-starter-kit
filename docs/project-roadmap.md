@@ -18,12 +18,15 @@
 - [x] CLI package skeleton
 - [x] Build and test validation
 
-### Phase 2: CLI Engine Core (IN PROGRESS)
-- [ ] Commander.js setup
-- [ ] Interactive prompts (prompts)
-- [ ] Project context object
-- [ ] Runtime validation matrix
-- [ ] Basic project generation logic
+### Phase 2: CLI Engine Core (COMPLETE)
+- [x] Commander.js setup
+- [x] Interactive prompts (prompts)
+- [x] Project context object
+- [x] Runtime validation matrix
+- [x] Basic project generation logic
+- [x] Code review fixes applied (H2, H1, M2)
+- [x] All tests passing (55/55, 96.42% coverage)
+**Completed:** 2026-01-17 15:59
 
 ### Phase 3: Template Base Layer (PENDING)
 - [ ] Adapter interface definitions
@@ -57,13 +60,27 @@
 ---
 
 ## 📈 Progress Summary
-- **Overall Completion:** 12.5% (1/8 Phases)
-- **Current Milestone:** CLI Engine Core
-- **Last Update:** 2026-01-17
+- **Overall Completion:** 25% (2/8 Phases)
+- **Current Milestone:** Template Base Layer
+- **Last Update:** 2026-01-17 15:59
 
 ---
 
 ## 📝 Changelog
+
+### [0.2.0] - 2026-01-17
+#### Completed
+- **Phase 2: CLI Engine Core** - Production-ready interactive CLI scaffolder
+  - Commander.js argument parsing with full CLI flag support
+  - Interactive 6-step wizard using prompts library
+  - Context object system for user choices
+  - Runtime validation matrix for SDK/framework/use-case compatibility
+  - Package manager detection (npm, pnpm, yarn, bun)
+  - Project name validation with security hardening
+  - Graceful abort handling (SIGINT/SIGTERM)
+  - Code quality: 9.2/10 after code review fixes
+  - Test coverage: 55/55 tests passing (96.42% coverage)
+  - All code review fixes applied (H2, H1, M2)
 
 ### [0.1.0] - 2026-01-17
 #### Added
