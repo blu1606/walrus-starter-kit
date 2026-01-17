@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDownload } from '../../../react/src/hooks/useStorage.js';
+import { useDownload } from '../hooks/useStorage.js';
 
 export function FilePreview() {
   const [blobId, setBlobId] = useState('');

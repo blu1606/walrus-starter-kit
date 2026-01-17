@@ -1,4 +1,4 @@
-import { formatBytes, formatDate } from '../../../base/src/utils/format.js';
+import { formatBytes, formatDate } from '../utils/format.js';
 import { removeItem } from '../utils/index-manager.js';
 import type { GalleryItem } from '../types/gallery.js';
 

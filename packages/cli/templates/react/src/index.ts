@@ -1,5 +1,5 @@
 // Re-export storage adapter from SDK layer for use case templates
-export { storageAdapter } from '../../sdk-mysten/src/index.js';
+export { storageAdapter } from './adapters/storage.js';
 
 // Re-export base adapter types
 export type {
@@ -7,4 +7,4 @@ export type {
   BlobMetadata,
   UploadOptions,
   DownloadOptions,
-} from '../../base/src/adapters/storage.js';
+} from './adapters/storage.js';

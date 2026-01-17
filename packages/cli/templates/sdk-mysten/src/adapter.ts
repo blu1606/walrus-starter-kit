@@ -3,7 +3,7 @@ import type {
   BlobMetadata,
   UploadOptions,
   DownloadOptions,
-} from '../../base/src/adapters/storage.js';
+} from '../adapters/storage.js';
 import { getWalrusClient } from './client.js';
 
 export class MystenStorageAdapter implements StorageAdapter {

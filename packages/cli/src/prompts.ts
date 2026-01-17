@@ -83,16 +83,18 @@ export async function runPrompts(
         },
       },
       {
-        type: initial.analytics !== undefined ? null : 'confirm',
+        // TODO: Re-enable when analytics template is created
+        type: null, // Temporarily disabled - template not implemented
         name: 'analytics',
         message: 'Include Blockberry analytics?',
         initial: false,
       },
       {
-        type: initial.tailwind !== undefined ? null : 'confirm',
+        // TODO: Re-enable when tailwind template is created
+        type: null, // Temporarily disabled - template not implemented
         name: 'tailwind',
         message: 'Include Tailwind CSS?',
-        initial: true,
+        initial: false, // Changed to false to prevent layer lookup
       },
       {
         type: initial.packageManager ? null : 'select',

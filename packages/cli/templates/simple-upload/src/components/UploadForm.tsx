@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUpload } from '../../../react/src/hooks/useStorage.js';
+import { useUpload } from '../hooks/useStorage.js';
 
 export function UploadForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

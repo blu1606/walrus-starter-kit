@@ -1,8 +1,8 @@
 import { WalrusClient } from '@mysten/walrus';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
-import { loadEnv } from '../../base/src/utils/env.js';
+import { loadEnv } from '../utils/env.js';
 import { getNetworkConfig } from './config.js';
-import type { WalrusNetwork } from '../../base/src/types/walrus.js';
+import type { WalrusNetwork } from '../types/walrus.js';
 
 let walrusClient: WalrusClient | null = null;
 

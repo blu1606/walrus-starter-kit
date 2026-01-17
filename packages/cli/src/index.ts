@@ -32,8 +32,9 @@ program
     '--use-case <use-case>',
     'Use case (simple-upload | gallery | defi-nft)'
   )
-  .option('--analytics', 'Include Blockberry analytics', false)
-  .option('--no-tailwind', 'Exclude Tailwind CSS')
+  // TODO: Re-enable when templates are implemented
+  // .option('--analytics', 'Include Blockberry analytics', false)
+  // .option('--no-tailwind', 'Exclude Tailwind CSS')
   .option('--skip-install', 'Skip dependency installation', false)
   .option('--skip-git', 'Skip git initialization', false)
   .option('--skip-validation', 'Skip project validation', false)
