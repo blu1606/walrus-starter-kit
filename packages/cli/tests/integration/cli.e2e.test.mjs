@@ -118,13 +118,13 @@ async function runTests() {
     );
 
     if (
-      !fs.existsSync(path.join(projectPath, 'src/components/UploadForm.tsx'))
+      !fs.existsSync(path.join(projectPath, 'src/components/features/upload-form.tsx'))
     ) {
-      throw new Error('UploadForm.tsx not found');
+      throw new Error('upload-form.tsx not found');
     }
 
     const content = fs.readFileSync(
-      path.join(projectPath, 'src/components/UploadForm.tsx'),
+      path.join(projectPath, 'src/components/features/upload-form.tsx'),
       'utf-8'
     );
     assertContains(
@@ -144,9 +144,9 @@ async function runTests() {
     );
 
     if (
-      !fs.existsSync(path.join(projectPath, 'src/components/GalleryGrid.tsx'))
+      !fs.existsSync(path.join(projectPath, 'src/components/features/gallery-grid.tsx'))
     ) {
-      throw new Error('GalleryGrid.tsx not found');
+      throw new Error('gallery-grid.tsx not found');
     }
     if (!fs.existsSync(path.join(projectPath, 'src/utils/index-manager.ts'))) {
       throw new Error('index-manager.ts not found');

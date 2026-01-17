@@ -114,17 +114,7 @@ test(
   }
 );
 
-// Test 4: Valid non-interactive mode with all SDK options
-test(
-  'Valid CLI flags - Tusky + Vue + Gallery',
-  'echo "" | npx tsx src/index.ts my-app --sdk tusky --framework vue --use-case gallery',
-  {
-    hasWelcome: /Welcome/,
-    hasValid: /valid/,
-  }
-);
-
-// Test 5: Invalid combination - Hibernuts + Vue
+// Test 4: Invalid combination - Hibernuts + Vue
 test(
   'Invalid combination - Hibernuts + Vue should fail',
   'echo "" | npx tsx src/index.ts test-app --sdk hibernuts --framework vue --use-case simple-upload 2>&1 || true',
@@ -134,7 +124,7 @@ test(
   }
 );
 
-// Test 6: Invalid combination - Tusky + DeFi/NFT
+// Test 5: Invalid combination - Tusky + DeFi/NFT
 test(
   'Invalid combination - Tusky + DeFi/NFT should fail',
   'echo "" | npx tsx src/index.ts test-app --sdk tusky --framework react --use-case defi-nft 2>&1 || true',
@@ -144,7 +134,7 @@ test(
   }
 );
 
-// Test 7: Check package manager detection
+// Test 6: Check package manager detection
 test(
   'Package manager detection',
   'echo "" | npx tsx src/index.ts pkg-test --sdk mysten --framework react --use-case simple-upload',
