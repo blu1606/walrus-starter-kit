@@ -7,6 +7,12 @@ import { detectPackageManager } from './utils/detect-pm.js';
 export async function runPrompts(
   initial: Partial<Context> = {}
 ): Promise<Partial<Context>> {
+  // Auto-fill package manager in non-interactive mode
+  const isInteractive = Boolean(process.stdin.isTTY);
+  if (!isInteractive && !initial.packageManager) {
+    initial.packageManager = detectPackageManager();
+  }
+
   const response = await prompts(
     [
       {
@@ -107,15 +113,18 @@ export async function runPrompts(
     ],
     {
       onCancel: () => {
-        console.log('\nOperation cancelled.');
-        process.exit(0);
+        console.error('\nOperation cancelled.');
+        console.error(
+          'Hint: Use -p flag to specify package manager in non-interactive mode (e.g., -p npm).'
+        );
+        process.exit(1);
       },
     }
   );
 
   if (!response.projectName && !initial.projectName) {
-    console.log('\nOperation cancelled.');
-    process.exit(0);
+    console.error('\nOperation cancelled.');
+    process.exit(1);
   }
 
   return { ...initial, ...response };

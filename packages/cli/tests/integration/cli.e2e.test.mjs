@@ -57,7 +57,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -77,7 +77,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -92,7 +92,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -113,7 +113,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -139,7 +139,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case gallery --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case gallery -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -158,7 +158,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -178,7 +178,7 @@ async function runTests() {
     const projectPath = path.join(TEMP_DIR, projectName);
 
     execSync(
-      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+      `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
       { cwd: TEMP_DIR, encoding: 'utf-8' }
     );
 
@@ -217,7 +217,7 @@ async function runTests() {
     let failed = false;
     try {
       execSync(
-        `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload --skip-install --no-tailwind --skip-git --skip-validation`,
+        `node "${CLI_BIN}" ${projectName} --sdk mysten --framework react --use-case simple-upload -p npm --skip-install --no-tailwind --skip-git --skip-validation`,
         { cwd: TEMP_DIR, encoding: 'utf-8', stdio: 'pipe' }
       );
     } catch (error) {
