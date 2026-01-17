@@ -90,10 +90,10 @@ export function validateProjectName(name: string): boolean | string {
 
 - **Orchestration:** Use a dedicated orchestrator (`runPostInstall`) to manage the sequence of post-generation tasks.
 - **Dependency Installation:** Auto-detect the user's preferred package manager (pnpm, npm, yarn, bun) and run `install`.
-- **Git Initialization:** Initialize a git repository and create an initial commit if git is available on the system.
+- **Git Initialization:** [DEPRECATED] Automatic git initialization has been removed to reduce complexity and avoid permission issues.
 - **Validation:** Run automated checks after generation, including `package.json` integrity and TypeScript compilation via `npx tsc --noEmit`.
-- **Skip Flags:** Always provide flags (e.g., `--skip-install`, `--skip-git`, `--skip-validation`) to allow users to opt-out of automatic tasks.
-- **Silent Failures:** Post-install warnings (like git failure) should not exit the process with an error code if the project was successfully generated.
+- **Skip Flags:** Always provide flags (e.g., `--skip-install`, `--skip-validation`) to allow users to opt-out of automatic tasks.
+- **Silent Failures:** Post-install warnings (like dependency installation failure) should not exit the process with an error code if the project was successfully generated.
 
 ## 4. Template Standards (templates/)
 

@@ -47,7 +47,7 @@ This plan addresses **critical bugs** preventing generated projects from working
 | [Phase 3](phase-03-update-sdk-api.md) | Update SDK v0.9.0 API calls | ✅ | 2h | 2026-01-18T00:17 |
 | [Phase 4](phase-04-wallet-signer-integration.md) | Implement wallet signer integration | ✅ | 3h | 2026-01-18T00:35 |
 | [Phase 5](phase-05-fix-type-mismatches.md) | Fix type mismatches | ✅ | 1h | 2026-01-18T00:58 |
-| [Phase 6](phase-06-remove-git-automation.md) | Remove git automation | ⬜ | 0.5h | - |
+| [Phase 6](phase-06-remove-git-automation.md) | Remove git automation | ✅ | 0.5h | 2026-01-18T01:36 |
 | [Phase 7](phase-07-add-readme-templates.md) | Add README templates | ⬜ | 2h | - |
 | [Phase 8](phase-08-testing-validation.md) | Testing and validation | ⬜ | 2h | - |
 

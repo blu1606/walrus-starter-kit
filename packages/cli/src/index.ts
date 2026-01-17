@@ -36,7 +36,7 @@ program
   // .option('--analytics', 'Include Blockberry analytics', false)
   // .option('--no-tailwind', 'Exclude Tailwind CSS')
   .option('--skip-install', 'Skip dependency installation', false)
-  .option('--skip-git', 'Skip git initialization', false)
+  .option('--skip-git', '[DEPRECATED] No longer used - git initialization removed', false)
   .option('--skip-validation', 'Skip project validation', false)
   .option(
     '-p, --package-manager <pm>',

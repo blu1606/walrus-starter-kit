@@ -3,6 +3,13 @@ import fs from 'fs-extra';
 import path from 'node:path';
 import { logger } from '../utils/logger.js';
 
+/**
+ * @deprecated Git initialization has been removed from create-walrus-app.
+ * Users should manually initialize git if needed: `git init && git add . && git commit -m "Initial commit"`
+ *
+ * This file is kept for backwards compatibility but is no longer used by the CLI.
+ */
+
 export interface GitResult {
   success: boolean;
   error?: Error;
@@ -21,6 +28,7 @@ async function isGitAvailable(): Promise<boolean> {
 
 /**
  * Initialize git repository
+ * @deprecated Git initialization has been removed from create-walrus-app post-install flow.
  */
 export async function initializeGit(projectPath: string): Promise<GitResult> {
   // Check if git is available
@@ -64,6 +72,7 @@ export async function initializeGit(projectPath: string): Promise<GitResult> {
 
 /**
  * Create initial commit
+ * @deprecated Git initialization has been removed from create-walrus-app post-install flow.
  */
 export async function createInitialCommit(
   projectPath: string

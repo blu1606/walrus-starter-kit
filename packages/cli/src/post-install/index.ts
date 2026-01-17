@@ -1,6 +1,5 @@
 import { logger } from '../utils/logger.js';
 import { installDependencies } from './package-manager.js';
-import { initializeGit, createInitialCommit } from './git.js';
 import { validateProject } from './validator.js';
 import { displaySuccess, displayError } from './messages.js';
 import type { Context } from '../types.js';
@@ -16,7 +15,6 @@ export interface PostInstallOptions {
 export interface PostInstallResult {
   success: boolean;
   installed: boolean;
-  gitInitialized: boolean;
   validated: boolean;
   error?: Error;
 }
@@ -35,7 +33,6 @@ export async function runPostInstall(
   const result: PostInstallResult = {
     success: true,
     installed: false,
-    gitInitialized: false,
     validated: false,
   };
 
@@ -58,20 +55,7 @@ export async function runPostInstall(
       }
     }
 
-    // Step 2: Initialize git
-    if (!skipGit) {
-      const gitResult = await initializeGit(projectPath);
-      result.gitInitialized = gitResult.success;
-
-      if (gitResult.success) {
-        const commitResult = await createInitialCommit(projectPath);
-        if (!commitResult.success) {
-          logger.warn('⚠️  Initial commit failed, but git repo was created');
-        }
-      }
-    }
-
-    // Step 3: Validate project
+    // Step 2: Validate project
     if (!skipValidation && result.installed) {
       const validationResult = await validateProject(projectPath);
       result.validated = validationResult.valid;

@@ -52,7 +52,6 @@ Post-Install & Verification (post-install/index.ts) — PM install, Git init, Va
 - **Intelligent Merging:** Deep merging of `package.json` dependencies and scripts with automated sorting.
 - **Template Transformation:** Variable replacement within template files using mustache-style syntax (`{{projectName}}`).
 - **Post-Install Automation:** Automatic dependency installation using `cross-spawn`.
-- **Git Initialization:** Automatic `git init` and initial commit for newly created projects.
 - **Project Verification:** Post-generation checks for `node_modules` and TypeScript compilation integrity.
 - **Atomic Operations:** Rollback support for partially generated directories on failure or SIGINT.
 - **Path Security:** Path traversal validation to ensure all template layers are within the package root.
@@ -73,8 +72,8 @@ Post-Install & Verification (post-install/index.ts) — PM install, Git init, Va
 | Types              | `types.ts`                        | TypeScript interfaces (Context, ValidationResult)  |
 | Logger             | `utils/logger.ts`                 | Colored console output (kleur)                     |
 | PM Detection       | `utils/detect-pm.ts`              | Package manager auto-detection                     |
-| Post-Install       | `post-install/index.ts`           | Orchestrates dependencies, git, and validation     |
-| Git Helper         | `post-install/git.ts`             | Git repository initialization and initial commit   |
+| Post-Install       | `post-install/index.ts`           | Orchestrates dependencies and validation           |
+| Git Helper         | `post-install/git.ts`             | [DEPRECATED] Former git initialization logic       |
 | PM Runner          | `post-install/package-manager.ts` | Executes package manager commands (install)        |
 | Project Validator  | `post-install/validator.ts`       | Verifies project integrity and TS compilation      |
 | UI Messages        | `post-install/messages.ts`        | Success/Error screens with next steps              |
