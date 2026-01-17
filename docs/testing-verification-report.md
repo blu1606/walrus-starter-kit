@@ -221,12 +221,17 @@ All essential E2E tests are now implemented and passing 100%.
 ## 🔍 Type Safety Verification (2026-01-18)
 
 **Verification Scope:** SDK v0.9.0 object-based parameter compliance
-**Result:** ✅ **PASS** - All types correctly aligned
+**Result:** ⚠️ **FAIL (Templates Only)** - CLI engine passes, but generated templates fail
 
-### Verified Components
-- ✅ Storage adapter implementations use correct SDK object params
-- ✅ React hooks properly typed for Walrus SDK v0.9.0
-- ✅ No positional parameter mismatches found
-- ✅ Metadata response structure correctly uses `response.metadata.V1`
+### Findings
+- ✅ CLI Core Logic: 100% type safe
+- ✅ Validation & Matrix: 100% type safe
+- ❌ **Generated Templates (sdk-mysten):** 8 compilation errors found in `adapter.ts`
+  - Mismatched parameter names (`nEpochs` vs `epochs`)
+  - Missing response properties (`newlyCreated`, `contentType`, `createdAt`)
+  - Network type incompatibility (`WalrusNetwork` vs testnet/mainnet enum)
 
-**Conclusion:** No remediation required. Type system is correctly enforced throughout codebase.
+### Remediation Plan
+- **Phase 09:** Dedicated fix for template SDK integration
+- **Target:** Zero-error compilation for all generated project combinations
+- **Status:** P0 Blocker for production release

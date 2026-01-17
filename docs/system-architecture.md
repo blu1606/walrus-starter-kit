@@ -79,6 +79,7 @@ Post-Install & Verification (post-install/index.ts) — PM install, Validation
 | Project Validator  | `post-install/validator.ts`       | Verifies project integrity and TS compilation      |
 | Env Copier        | `generator/file-ops.ts`           | Auto-copy `.env.example` to `.env` if missing      |
 | UI Messages        | `post-install/messages.ts`        | Success/Error screens with next steps              |
+| Template Tester    | `scripts/test-templates.sh`       | Automated validation for template combinations      |
 
 ### 2.4 Context Object
 

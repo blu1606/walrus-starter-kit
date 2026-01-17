@@ -40,11 +40,12 @@ End-to-end CLI behavior validation:
 | ------------------------------- | ------------------------------------------ |
 | `packages/cli/src/test-base.ts` | Base template structure validation utility |
 
-### Post-Install Tests (1 file)
+### Automated Template Validation (New)
 
-| File                                                 | Purpose                                        |
-| ---------------------------------------------------- | ---------------------------------------------- |
-| `packages/cli/src/post-install/post-install.test.ts` | Unit & integration tests for post-install flow |
+| File                                     | Purpose                                               | Type      |
+| ---------------------------------------- | ----------------------------------------------------- | --------- |
+| `packages/cli/scripts/test-templates.sh` | Matrix testing for all SDK/Framework/UseCase combos   | Automated |
+| `packages/cli/scripts/test-results.md`   | Detailed logs of template generation and compilation  | Report    |
 
 ## Current Organization Pattern
 

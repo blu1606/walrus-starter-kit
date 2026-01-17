@@ -87,30 +87,42 @@
 - [x] Git initialization removed (Manually managed by users)
 - [x] Generated project validation
 - [x] Success/Error messaging system
-      **Completed:** 2026-01-17 18:55
-      **Update:** Git automation removed 2026-01-18 (Phase 6 optimization)
+- [x] Automated template combination testing
+      **Completed:** 2026-01-18 02:15
+
+### Phase 9: SDK Integration Fix (PLANNED)
+
+- [ ] Fix template adapter type mismatches with @mysten/walrus v0.9.0
+- [ ] Update client.ts network types
+- [ ] Fix export paths in templates
+- [ ] Verify zero-error TypeScript compilation for all combinations
+      **Target:** 2026-01-18
 
 ---
 
 ## 📈 Progress Summary
 
-- **Overall Completion:** 97% (Core Engine & React MVP Ready + Template Fixes 6/8)
-- **Current Milestone:** v0.1.1 Alpha Release
-- **Last Update:** 2026-01-18 01:45
+- **Overall Completion:** 98% (Core Engine & React MVP Ready + Testing Phase Complete)
+- **Current Milestone:** v0.1.2 Alpha (Fixing Template Types)
+- **Last Update:** 2026-01-18 02:30
 
 ---
 
 ## 📝 Changelog
 
-### [0.1.1] - 2026-01-18
+### [0.1.2] - 2026-01-18
 
 #### Added
 
-- **Auto .env creation (Phase 1/5)** - Added function to copy `.env.example` to `.env`
-  - Implementation in `packages/cli/src/generator/file-ops.ts`
-  - Added `EnvCopyResult` interface for result reporting
-  - Handles edge cases: missing source or existing target
-  - **Completed:** 2026-01-18T01:52:00+07:00
+- **Template Validation Suite (Phase 8)** - Automated testing for all template combinations
+  - Created `packages/cli/scripts/test-templates.sh`
+  - Validates project generation, install, and compilation for 5+ combinations
+  - Integrated Phase 6 (No Git) and Phase 7 (README) verification
+
+#### Fixed
+
+- **Test Script Security** - Hardened template test script against command injection
+  - Added input validation for SDK, framework, and use-case parameters
 
 ### [0.1.0] - 2026-01-17
 
