@@ -11,15 +11,15 @@ This monorepo contains the `create-walrus-app` CLI tool that helps developers qu
 ```
 walrus-starter-kit/
 ├── packages/
-│   └── cli/                 # The scaffolder CLI tool
-├── templates/               # Static template assets (excluded from workspace)
+│   └── cli/                 # Scaffolder CLI tool
+├── templates/               # Modular layers (Root copies for reference)
 ├── examples/                # Generated test outputs
 └── docs/                    # Project documentation
 ```
 
 ## Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js ^20.0.0 || ^22.0.0 || >=24.0.0
 - pnpm >= 9.0.0
 
 ## Getting Started

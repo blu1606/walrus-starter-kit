@@ -2,12 +2,12 @@
 
 **Project Name:** Walrus Starter Kit
 **CLI Tool:** `create-walrus-app`
-**Version:** 1.0.0
-**Status:** Complete (Phase 8/8 Complete - 100%)
+**Version:** 0.1.0
+**Status:** In Progress (Phase 8/8 Complete - Core MVP Ready)
 
 ## 1. Executive Summary
 
-Walrus Starter Kit is a production-grade interactive CLI tool designed to simplify the development of applications on the Walrus Protocol (Sui blockchain). It provides a modular scaffolding system using a **Base + Layer + Adapter Pattern**, allowing developers to choose from various SDKs, frameworks, and use cases.
+Walrus Starter Kit is a production-grade interactive CLI tool designed to simplify the development of applications on the Walrus Protocol (Sui blockchain). It provides a modular scaffolding system using a **Base + Layer + Adapter Pattern**, allowing developers to choose from various SDKs, frameworks, and use cases. While core functionality is 100% complete, additional templates (Vue, Plain TS) and features (Tailwind, Analytics) are in development.
 
 ## 2. Product Vision
 
@@ -53,7 +53,7 @@ The goal is to provide the "create-next-app" experience for the Walrus ecosystem
 
 ## 5. Technical Constraints
 
-- **Node.js:** >= 18.0.0
+- **Node.js:** ^20.0.0 || ^22.0.0 || >=24.0.0
 - **Package Manager:** pnpm >= 9.0.0 (for monorepo management)
 - **Language:** TypeScript for all core components and templates.
 

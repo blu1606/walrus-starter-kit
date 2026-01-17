@@ -2,11 +2,11 @@
 
 **Project:** Walrus Starter Kit
 **Generated:** 2026-01-17
-**Status:** Phase 8 (Post-Install & Validation) Complete - Version 1.0.0 Ready
+**Status:** Core MVP Ready - Version 0.1.0
 
 ## 1. Overview
 
-The Walrus Starter Kit is a monorepo containing a CLI tool (`create-walrus-app`) and modular templates for building Walrus applications on Sui. It uses a layered template system to allow mixing and matching SDKs, frameworks, and use cases. The CLI features a sophisticated generation engine that merges multiple template layers with atomic rollback support.
+The Walrus Starter Kit is a monorepo containing a CLI tool (`create-walrus-app`) and modular templates for building Walrus applications on Sui. It uses a layered template system to allow mixing and matching SDKs, frameworks, and use cases. The CLI features a sophisticated generation engine that merges multiple template layers with atomic rollback support. Note: Vue and Plain TS frameworks are currently in development.
 
 ## 2. Directory Structure
 
@@ -36,6 +36,7 @@ The Walrus Starter Kit is a monorepo containing a CLI tool (`create-walrus-app`)
 - `/templates`: Modular layers for project generation.
   - `base/`: Common configs and interfaces.
   - `sdk-mysten/`: @mysten/walrus SDK adapter implementation.
+  - `enoki/`: (WIP) Enoki SDK adapter implementation (root template only).
   - `react/`: React 18 framework layer with hooks and providers.
   - `simple-upload/`: Single file upload/download use case.
   - `gallery/`: Multi-file gallery with localStorage index.

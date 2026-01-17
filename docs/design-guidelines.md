@@ -508,12 +508,12 @@ className =
 
 ### **CLI Tool**
 
-- [ ] kleur for colors (no chalk/picocolors)
-- [ ] ora for spinners
-- [ ] prompts for interactive questions
-- [ ] ASCII box-drawing characters (╭╮╰╯─│)
-- [ ] Emoji consistency (✅❌⚠️ℹ️🐋)
-- [ ] Step indicators `[1/6]`
+- [x] kleur for colors (no chalk/picocolors)
+- [ ] ora for spinners (Planned)
+- [x] prompts for interactive questions
+- [x] ASCII box-drawing characters (╭╮╰╯─│)
+- [x] Emoji consistency (✅❌⚠️ℹ️🐋)
+- [x] Step indicators `[1/6]`
 
 ### **React Templates**
 
