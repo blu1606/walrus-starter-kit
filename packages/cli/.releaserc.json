@@ -9,7 +9,7 @@
       "@semantic-release/exec",
       {
         "prepareCmd": "node -e \"const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('./package.json'));pkg.version='${nextRelease.version}';fs.writeFileSync('./package.json',JSON.stringify(pkg,null,2)+'\\n')\"",
-        "publishCmd": "echo '//registry.npmjs.org/:_authToken='$NPM_TOKEN > .npmrc && pnpm publish --access public --no-git-checks && echo '@blu1606:registry=https://npm.pkg.github.com' > .npmrc && echo '//npm.pkg.github.com/:_authToken='$NODE_AUTH_TOKEN >> .npmrc && pnpm publish --registry=https://npm.pkg.github.com --no-git-checks"
+        "publishCmd": "echo '//registry.npmjs.org/:_authToken='$NPM_TOKEN > .npmrc && pnpm publish --access public --no-git-checks"
       }
     ],
     [
