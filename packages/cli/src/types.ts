@@ -11,6 +11,7 @@ export interface Context {
   useCase: UseCase;
   analytics: boolean;
   tailwind: boolean;
+  useZkLogin: boolean;
   packageManager: PackageManager;
 }
 

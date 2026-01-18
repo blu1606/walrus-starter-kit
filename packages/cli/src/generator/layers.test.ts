@@ -13,6 +13,7 @@ describe('getPresetName', () => {
       useCase: 'simple-upload',
       analytics: false,
       tailwind: false,
+      useZkLogin: false,
       packageManager: 'pnpm',
     };
 
@@ -29,6 +30,7 @@ describe('getPresetName', () => {
       useCase: 'gallery',
       analytics: false,
       tailwind: true,
+      useZkLogin: false,
       packageManager: 'pnpm',
     };
 
@@ -45,6 +47,7 @@ describe('getPresetName', () => {
       useCase: 'defi-nft',
       analytics: true,
       tailwind: false,
+      useZkLogin: false,
       packageManager: 'npm',
     };
 
@@ -61,12 +64,48 @@ describe('getPresetName', () => {
       useCase: 'simple-upload',
       analytics: true,
       tailwind: true,
+      useZkLogin: false,
       packageManager: 'yarn',
     };
 
     const presetName = getPresetName(context);
     // analytics comes before tailwind alphabetically
     expect(presetName).toBe('plain-ts-mysten-simple-upload-analytics-tailwind');
+  });
+
+  it('should include enoki in preset name when useZkLogin is true', () => {
+    const context: Context = {
+      projectName: 'test-app',
+      projectPath: '/path/to/test-app',
+      sdk: 'mysten',
+      framework: 'react',
+      useCase: 'simple-upload',
+      analytics: false,
+      tailwind: false,
+      useZkLogin: true,
+      packageManager: 'pnpm',
+    };
+
+    const presetName = getPresetName(context);
+    expect(presetName).toBe('react-mysten-simple-upload-enoki');
+  });
+
+  it('should sort all features alphabetically', () => {
+    const context: Context = {
+      projectName: 'test-app',
+      projectPath: '/path/to/test-app',
+      sdk: 'mysten',
+      framework: 'react',
+      useCase: 'gallery',
+      analytics: true,
+      tailwind: true,
+      useZkLogin: true,
+      packageManager: 'pnpm',
+    };
+
+    const presetName = getPresetName(context);
+    // alphabetical: analytics, enoki, tailwind
+    expect(presetName).toBe('react-mysten-gallery-analytics-enoki-tailwind');
   });
 });
 
@@ -80,6 +119,7 @@ describe('resolvePresetPath', () => {
       useCase: 'simple-upload',
       analytics: false,
       tailwind: false,
+      useZkLogin: false,
       packageManager: 'pnpm',
     };
 
@@ -99,6 +139,7 @@ describe('resolvePresetPath', () => {
       useCase: 'simple-upload',
       analytics: false,
       tailwind: false,
+      useZkLogin: false,
       packageManager: 'pnpm',
     };
 

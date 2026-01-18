@@ -65,6 +65,7 @@ export function buildContext(
     // Temporarily disabled until templates are implemented
     analytics: false, // Boolean(merged.analytics),
     tailwind: false, // Boolean(merged.tailwind),
+    useZkLogin: Boolean(merged.useZkLogin),
     packageManager: packageManager as Context['packageManager'],
   };
 }

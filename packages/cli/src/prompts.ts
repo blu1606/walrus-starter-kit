@@ -97,6 +97,23 @@ export async function runPrompts(
         initial: false, // Changed to false to prevent layer lookup
       },
       {
+        type: (prev, answers) => {
+          // Only show zkLogin prompt for mysten SDK with simple-upload or gallery
+          const sdk = initial.sdk || answers.sdk;
+          const useCase = answers.useCase;
+
+          if (sdk !== 'mysten') return null;
+          if (!['simple-upload', 'gallery'].includes(useCase)) return null;
+          if (initial.useZkLogin !== undefined) return null;
+
+          return 'confirm';
+        },
+        name: 'useZkLogin',
+        message:
+          'Use zkLogin (Enoki) authentication? (Web2 login with Google/Apple)',
+        initial: false,
+      },
+      {
         type: initial.packageManager ? null : 'select',
         name: 'packageManager',
         message: 'Choose package manager:',

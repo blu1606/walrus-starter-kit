@@ -35,6 +35,7 @@ program
   // TODO: Re-enable when templates are implemented
   // .option('--analytics', 'Include Blockberry analytics', false)
   // .option('--no-tailwind', 'Exclude Tailwind CSS')
+  .option('--use-zk-login', 'Use zkLogin (Enoki) authentication', false)
   .option('--skip-install', 'Skip dependency installation', false)
   .option('--skip-git', '[DEPRECATED] No longer used - git initialization removed', false)
   .option('--skip-validation', 'Skip project validation', false)

@@ -41,6 +41,10 @@ export function getPresetName(context: Context): string {
     optionalFeatures.push('analytics');
   }
 
+  if (context.useZkLogin) {
+    optionalFeatures.push('enoki');
+  }
+
   if (context.tailwind) {
     optionalFeatures.push('tailwind');
   }
