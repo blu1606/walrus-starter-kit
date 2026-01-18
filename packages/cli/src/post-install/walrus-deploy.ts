@@ -11,7 +11,7 @@ import type { Context } from '../types.js';
  */
 export async function setupWalrusDeploy(
   projectPath: string,
-  context: Context
+  _context: Context
 ): Promise<void> {
   try {
     const isInteractive = Boolean(process.stdin.isTTY);
