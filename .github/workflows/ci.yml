@@ -3,8 +3,26 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'packages/cli/**'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.json'
+      - '.eslintrc.json'
+      - '.prettierrc.json'
   pull_request:
     branches: [main, develop]
+    paths:
+      - 'packages/cli/**'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.json'
+      - '.eslintrc.json'
+      - '.prettierrc.json'
 
 jobs:
   lint:
