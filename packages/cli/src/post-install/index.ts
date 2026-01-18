@@ -2,6 +2,7 @@ import { logger } from '../utils/logger.js';
 import { installDependencies } from './package-manager.js';
 import { validateProject } from './validator.js';
 import { displaySuccess, displayError } from './messages.js';
+import { setupWalrusDeploy } from './walrus-deploy.js';
 import type { Context } from '../types.js';
 
 export interface PostInstallOptions {
@@ -63,6 +64,11 @@ export async function runPostInstall(
         logger.warn('⚠️  Project validation failed:');
         validationResult.errors.forEach((err) => logger.warn(`   - ${err}`));
       }
+    }
+
+    // Step 3: Setup Walrus deployment (interactive prompt)
+    if (result.installed) {
+      await setupWalrusDeploy(projectPath, context);
     }
 
     // Display success message
