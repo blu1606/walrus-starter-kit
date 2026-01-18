@@ -250,3 +250,73 @@ pre {
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* Enoki zkLogin Auth Styles */
+.enoki-auth {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--walrus-surface);
+  border-radius: 8px;
+  border: 1px solid var(--walrus-accent-purple);
+}
+
+.enoki-address {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--walrus-accent-purple);
+}
+
+.google-login-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--walrus-accent-blue), var(--walrus-accent-purple));
+  border: none;
+  border-radius: 8px;
+  color: var(--walrus-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.google-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 162, 255, 0.3);
+}
+
+.logout-btn {
+  padding: 0.5rem 1rem;
+  background-color: var(--walrus-surface-hover);
+  border: 1px solid var(--walrus-border);
+  border-radius: 6px;
+  color: var(--walrus-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: var(--walrus-warning);
+  color: var(--walrus-text-primary);
+  border-color: var(--walrus-warning);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  color: var(--walrus-text-secondary);
+  font-size: 0.875rem;
+  gap: 1rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--walrus-border);
+}
+
+.auth-divider span {
+  padding: 0 0.5rem;
+}
