@@ -43,7 +43,7 @@ Create new preset `react-mysten-simple-upload-enoki` that combines:
 - Update app layout for dual auth
 
 ### Phase 04: Upload Integration
-**Status:** pending | **File:** phase-04-upload-integration.md
+**Status:** complete ✓ | **File:** phase-04-upload-integration.md | **Completed:** 2026-01-18
 - Adapt use-upload hook for zkLogin
 - Update upload form with Enoki signer
 - Ensure backward compatibility with standard wallets

@@ -10,7 +10,8 @@
 ## Overview
 
 **Priority:** P1
-**Status:** pending
+**Status:** complete ✓
+**Completed:** 2026-01-18
 **Description:** Adapt upload hook to work with both zkLogin and standard wallet signers
 
 ## Key Insights
