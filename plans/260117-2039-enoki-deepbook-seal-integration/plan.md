@@ -209,11 +209,44 @@ const { address, isLoggedIn, isUsingEnoki } = useSession();
   - [System Architecture](../../docs/system-architecture.md)
   - [Code Standards](../../docs/code-standards.md)
 
+## Validation Summary
+
+**Validated:** 2026-01-18
+**Questions asked:** 4
+
+### Confirmed Decisions
+
+1. **Implementation sequence**: Focus ONLY on Enoki (Phase 01-04) first
+   - Defer DeepBook and Seal to later releases
+   - Rationale: Lower risk, faster validation of core zkLogin + sponsored txns feature
+   - Impact: Reduces initial scope from 50h to ~15h (Phases 1-4 only)
+
+2. **Rate limiting storage**: In-memory Map acceptable for MVP
+   - Limitations: Resets on server restart, not production-ready
+   - Mitigation: Document limitation, plan Redis upgrade post-MVP
+   - Impact: Saves 2-3h implementation time, simpler deployment
+
+3. **Privacy policy**: Store Google userInfo (name, picture, email) in sessionStorage as planned
+   - Tab-scoped storage, auto-cleanup on tab close
+   - GDPR-friendly for non-sensitive profile data
+   - No encryption overhead needed for MVP
+
+4. **Dependency resolution**: Only folder scaffolding needed before Phase 01
+   - Unresolved questions (allowedMoveCallTargets, cost structure, etc.) can be researched in parallel
+   - Start implementation immediately with preset structure
+   - Impact: No blockers for Phase 01 start
+
+### Action Items
+- [ ] Update plan.md to reflect Enoki-only scope (Phases 1-4)
+- [ ] Document in-memory rate limiting as temporary solution
+- [ ] Add note about sessionStorage privacy assumptions
+- [ ] Create folder scaffolding for `templates/enoki/` before coding
+
 ## Unresolved Questions
 
-1. Enoki Console allowedMoveCallTargets for Walrus upload - need list of Move function IDs
-2. Cost structure for sponsored txns (Enoki credit system) - confirm budget
-3. Testnet vs mainnet migration for zkLogin sessions - session portability?
-4. DeepBook V3 liquidity provider rewards for blob-backed assets - incentive structure?
-5. Seal decryption latency benchmarks for high-frequency trading scenarios
-6. Audit firm selection and timeline (2-3 weeks feasible?)
+1. Enoki Console allowedMoveCallTargets for Walrus upload - need list of Move function IDs (research in parallel)
+2. Cost structure for sponsored txns (Enoki credit system) - confirm budget (non-blocking)
+3. Testnet vs mainnet migration for zkLogin sessions - session portability? (defer to Phase 08)
+4. DeepBook V3 liquidity provider rewards for blob-backed assets - incentive structure? (deferred to Phase 05)
+5. Seal decryption latency benchmarks for high-frequency trading scenarios (deferred to Phase 06)
+6. Audit firm selection and timeline (2-3 weeks feasible?) (deferred to Phase 07)
