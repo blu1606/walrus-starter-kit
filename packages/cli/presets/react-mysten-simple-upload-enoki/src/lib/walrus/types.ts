@@ -29,6 +29,18 @@ export interface SignAndExecuteTransactionResult {
   effects?: unknown;
 }
 
+/**
+ * Unified signer interface
+ *
+ * Compatible with both zkLogin (Enoki) and standard Sui wallets
+ */
+export interface UnifiedSigner {
+  address: string;
+  signAndExecuteTransaction: (
+    args: SignAndExecuteTransactionArgs
+  ) => Promise<SignAndExecuteTransactionResult>;
+}
+
 export interface UploadOptions {
   /** Number of epochs to store (Walrus-specific) */
   epochs?: number;
@@ -36,11 +48,8 @@ export interface UploadOptions {
   contentType?: string;
   /** Sui client with Walrus extension (from useSuiClient hook) */
   client?: SuiClient;
-  /** Wallet signer for authenticated uploads with address and transaction signing */
-  signer?: {
-    address: string;
-    signAndExecuteTransaction: (args: SignAndExecuteTransactionArgs) => Promise<SignAndExecuteTransactionResult>;
-  };
+  /** Wallet signer for authenticated uploads */
+  signer?: UnifiedSigner;
 }
 
 export interface DownloadOptions {

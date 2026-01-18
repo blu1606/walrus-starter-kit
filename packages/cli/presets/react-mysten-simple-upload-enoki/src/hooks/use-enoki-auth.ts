@@ -4,7 +4,7 @@ import { enokiConfig } from '../lib/enoki/index.js';
 /**
  * Enoki authentication hook
  *
- * Provides Google OAuth login/logout and zkLogin state
+ * Provides Google OAuth login/logout, zkLogin state, and unified signer interface
  */
 export function useEnokiAuth() {
   const enokiFlow = useEnokiFlow();
@@ -28,10 +28,25 @@ export function useEnokiAuth() {
     enokiFlow.logout();
   };
 
+  const getSigner = () => {
+    if (!address || !enokiFlow) return null;
+
+    return {
+      address,
+      signAndExecuteTransaction: async (args: any) => {
+        const result = await enokiFlow.signAndExecuteTransaction({
+          transaction: args.transaction,
+        });
+        return { digest: result.digest };
+      },
+    };
+  };
+
   return {
     isEnokiConnected: !!address,
     enokiAddress: address,
     login,
     logout,
+    getSigner,
   };
 }

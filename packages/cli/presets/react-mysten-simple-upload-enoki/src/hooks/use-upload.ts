@@ -1,12 +1,20 @@
 import { useMutation } from '@tanstack/react-query';
+import { useSuiClient } from '@mysten/dapp-kit';
 import { storageAdapter } from '../lib/walrus/index.js';
-import type { UploadOptions, SignAndExecuteTransactionArgs } from '../lib/walrus/types.js';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
+import type { UploadOptions } from '../lib/walrus/types.js';
+import { useEnokiAuth } from './use-enoki-auth.js';
+import { useWallet } from './use-wallet.js';
 
+/**
+ * Upload hook with dual auth support
+ *
+ * Supports both zkLogin (Enoki) and standard wallet authentication
+ * Prioritizes zkLogin if both are available
+ */
 export function useUpload() {
-  const currentAccount = useCurrentAccount();
-  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
+  const { getSigner: getEnokiSigner } = useEnokiAuth();
+  const { getSigner: getWalletSigner } = useWallet();
 
   return useMutation({
     mutationFn: async ({
@@ -16,33 +24,21 @@ export function useUpload() {
       file: File;
       options?: UploadOptions;
     }) => {
-      if (!currentAccount) {
-        throw new Error('Wallet not connected. Please connect your wallet to upload files.');
-      }
+      // Prioritize zkLogin, fallback to standard wallet
+      const signer = getEnokiSigner() || getWalletSigner();
 
-      // Wrap signAndExecute to return Promise
-      const signTransaction = (args: SignAndExecuteTransactionArgs) => {
-        return new Promise<{ digest: string }>((resolve, reject) => {
-          signAndExecute(
-            {
-              transaction: args.transaction,
-            },
-            {
-              onSuccess: (result) => resolve({ digest: result.digest }),
-              onError: (error) => reject(error),
-            }
-          );
-        });
-      };
+      if (!signer) {
+        throw new Error(
+          'No wallet connected. Please login with Google or connect a wallet.'
+        );
+      }
 
       const blobId = await storageAdapter.upload(file, {
         ...options,
         client: suiClient,
-        signer: {
-          address: currentAccount.address,
-          signAndExecuteTransaction: signTransaction,
-        },
+        signer,
       });
+
       return { blobId, file };
     },
   });
