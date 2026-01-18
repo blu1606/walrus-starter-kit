@@ -1,0 +1,9 @@
+{
+  "name": "enoki-layer",
+  "private": true,
+  "dependencies": {
+    "@mysten/enoki": "^0.15.0",
+    "@mysten/sui": "^1.10.0",
+    "zod": "^3.22.0"
+  }
+}
