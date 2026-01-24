@@ -1,0 +1,12 @@
+02da643c1613b6ac388999d831759154  templates/base/.env.example
+24bddfe57ea25b4766d8c3035ef68013  templates/base/tsconfig.json
+3c65cf9364c1e808752713b03f327469  templates/base/src/types/index.ts
+6e9d54ba613e975d9be3662baef9bf9d  templates/base/sites-config.yaml
+9ebdf0462dea63a3ed7981799ca0f23e  templates/base/src/utils/env.ts
+bddf4557dc3309279b9f50e0f233c7de  templates/base/src/utils/format.ts
+bf5b546e879b9d3813fbfbc0bf143e88  templates/base/README.md
+de2775aaab4be60c08f76f7cda209e31  templates/base/WALRUS_SETUP.md
+dfcff215d1056df69ebfc4c791f1d577  templates/base/src/adapters/storage.ts
+e1afc89abf32908ebfa19253855bc5e1  templates/base/package.json
+e6707f2a37ff159d30bf601b3ecf3a5c  templates/base/.gitignore
+f08bc8f4f1a00d4e767cf47e76207ad6  templates/base/src/types/walrus.ts
