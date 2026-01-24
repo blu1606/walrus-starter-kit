@@ -3,9 +3,11 @@
 ## Project Overview
 
 **Target:** `npm create walrus-app@latest` - Production-ready CLI scaffolder (v1.0.0)
-**Architecture:** Monorepo + Base/Layer + Adapter Pattern
-**Timeline:** 8 days (Jan 18-25, 2026)
-**MVP Scope:** 1 SDK × 1 Framework × 3 Use Cases - COMPLETE
+**Architecture:** Monorepo + Preset-Based Templates
+**Current Version:** 0.1.5
+**MVP Scope:** 3 Presets (React + Mysten, React + Mysten + Gallery, React + Mysten + Enoki)
+**Overall Completion:** 99.2% (Core MVP Complete, Enoki Logic Pending)
+**Last Update:** 2026-01-18 13:00
 
 ---
 
@@ -49,7 +51,7 @@
 - [x] WalrusStorageAdapter implementing base interface
       **Completed:** 2026-01-17 17:15
 
-### Phase 5: Framework Layer (IN PROGRESS)
+### Phase 5: Framework Layer (COMPLETE - React Only)
 
 - [x] React + Vite template
   - [x] Provider pattern (QueryProvider, WalletProvider)
@@ -61,8 +63,8 @@
   - [x] @mysten/dapp-kit integration
   - [x] TanStack Query setup
         **Completed:** 2026-01-17 18:00
-- [ ] Vue + Vite template (Planned)
-- [ ] Plain TypeScript template (Planned)
+- [ ] Vue + Vite template (Planned - Not in current presets)
+- [ ] Plain TypeScript template (Planned - Not in current presets)
 
 ### Phase 6: Use Case Layers (COMPLETE)
 
@@ -112,9 +114,11 @@
 
 ## 📈 Progress Summary
 
-- **Overall Completion:** 98.7% (Enoki Scaffolding & Documentation Complete)
-- **Current Milestone:** v0.1.4 Alpha (Enoki Integration)
-- **Last Update:** 2026-01-18 09:15
+- **Overall Completion:** 99.2% (Core MVP + Enoki Scaffolding Complete)
+- **Current Milestone:** v0.1.5 (Enoki Documentation Complete)
+- **Next Milestone:** v0.2.0 (Enoki Provider Implementation)
+- **Production Status:** React + Mysten presets ready for production use
+- **Beta Status:** Enoki preset scaffolding complete, logic implementation pending
 
 ---
 

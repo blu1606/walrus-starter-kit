@@ -1,6 +1,6 @@
 # System Architecture
 
-**Walrus Starter Kit** uses a modular, layered architecture to provide a flexible and robust scaffolding experience.
+**Walrus Starter Kit** uses a preset-based architecture for reliable, production-ready scaffolding. The project transitioned from a layer-based template system to pre-built presets for better maintainability and zero-error guarantees.
 
 ## 1. Monorepo Structure
 
@@ -9,20 +9,31 @@ The project is managed as a pnpm monorepo:
 ```
 walrus-starter-kit/
 ├── packages/
-│   └── cli/                 # Scaffolder Engine (create-walrus-app)
-├── templates/               # Modular Template Layers (Excluded from workspace)
-│   ├── base/                # Layer 1: Core config & Adapter interface
-│   ├── sdk-mysten/          # Layer 2: @mysten/walrus SDK implementation
-│   ├── react/               # Layer 3: React 18 + Vite framework
-│   ├── framework-*/         # Layer 3: Other UI Frameworks (Vue, Plain TS)
-│   └── use-case-*/          # Layer 4: Feature-specific code
-├── examples/                # Generated test outputs (Excluded from workspace)
-└── docs/                    # Technical Documentation
+│   ├── cli/                     # Scaffolder Engine (create-walrus-app)
+│   │   └── src/                 # CLI source code
+│   └── templates/               # Pre-built complete templates
+│       ├── react-mysten-simple-upload/
+│       ├── react-mysten-gallery/
+│       └── react-mysten-simple-upload-enoki/
+├── templates/                   # Reference layers (legacy documentation)
+│   ├── base/                    # SDK-agnostic foundation
+│   ├── sdk-mysten/              # @mysten/walrus SDK implementation
+│   ├── enoki/                   # Enoki zkLogin layer
+│   ├── react/                   # React framework layer
+│   ├── simple-upload/           # Upload use case
+│   └── gallery/                 # Gallery use case
+├── tools/                       # Development tools
+│   ├── test-apps/               # Test applications
+│   └── validation/              # Template validation scripts
+├── docs/                        # Technical Documentation
+└── examples/                    # Generated test outputs
 ```
+
+**Note:** The `templates/` directory contains legacy reference layers for documentation. Runtime generation uses pre-built presets from `packages/templates/`. Development tools are in `tools/`.
 
 ## 2. Scaffolding Engine (CLI)
 
-The `packages/cli` engine implements a pipeline architecture:
+The `packages/cli` engine implements a streamlined preset-based pipeline:
 
 ### 2.1 Pipeline Flow
 
@@ -35,51 +46,48 @@ Run Interactive Prompts (prompts.ts) ←→ Skip if flags provided
     ↓
 Build Context (context.ts) — Merge args + prompts
     ↓
-Validate Compatibility (validator.ts) — Matrix check
+Validate Compatibility (matrix.ts) — Ensure valid preset exists
     ↓
-Generate Project (generator/index.ts) — Layered composition & .env setup
+Generate Project (generator/index.ts) — Copy preset + transform + .env setup
     ↓
 Post-Install & Verification (post-install/index.ts) — PM install, Validation
 ```
 
 ### 2.2 Core Responsibilities
 
-- **Interaction:** Using `commander` and `prompts` for hybrid mode (interactive/CI-CD).
-- **Validation:** Checking the compatibility matrix (SDK vs Framework vs Use Case).
-- **Context Building:** Merging CLI arguments and prompt results with runtime type validation.
-- **Package Manager Detection:** Auto-detecting pnpm/yarn/bun/npm from environment.
-- **Layered Composition:** Assembling the final project by merging multiple template layers (Base + SDK + Framework + Use Case).
-- **Intelligent Merging:** Deep merging of `package.json` dependencies and scripts with automated sorting.
-- **Template Transformation:** Variable replacement within template files using mustache-style syntax (`{{projectName}}`).
-- **Automatic Environment Setup:** Auto-copying `.env.example` to `.env` after transformation with non-critical error handling and dry-run support.
-- **Post-Install Automation:** Automatic dependency installation using `cross-spawn`.
-- **Project Verification:** Post-generation checks for `node_modules` and TypeScript compilation integrity.
-- **Atomic Operations:** Rollback support for partially generated directories on failure or SIGINT.
-- **Path Security:** Path traversal validation to ensure all template layers are within the package root.
+- **Interaction:** Using `commander` and `prompts` for hybrid mode (interactive/CI-CD)
+- **Validation:** Checking compatibility matrix to ensure preset exists
+- **Context Building:** Merging CLI arguments and prompt results with runtime validation
+- **Package Manager Detection:** Auto-detecting pnpm/yarn/bun/npm from environment
+- **Preset Resolution:** Determining preset path from SDK + framework + use-case selection
+- **Template Copying:** Direct copy of complete preset directory to target
+- **Template Transformation:** Variable replacement within template files (`{{projectName}}`)
+- **Automatic Environment Setup:** Auto-copying `.env.example` to `.env` with dry-run support
+- **Post-Install Automation:** Automatic dependency installation using `cross-spawn`
+- **Project Verification:** Post-generation checks for `node_modules` and TypeScript compilation
+- **Atomic Operations:** Rollback support for partially generated directories on failure or SIGINT
+- **Path Security:** Path traversal validation to ensure preset paths are within package root
 
 ### 2.3 Key Components
 
-| Component          | File                              | Purpose                                            |
-| ------------------ | --------------------------------- | -------------------------------------------------- |
-| Entry Point        | `index.ts`                        | Commander setup, orchestration, SIGINT handling    |
-| Interactive Wizard | `prompts.ts`                      | 6-step prompts with dynamic choices                |
-| Context Builder    | `context.ts`                      | Merge args/prompts, runtime validation             |
-| Generator Engine   | `generator/index.ts`              | Orchestrates the layered generation flow           |
-| Layer Resolver     | `generator/layers.ts`             | Determines and validates active template layers    |
-| JSON Merger        | `generator/merge.ts`              | Merges package.json with dependency reconciliation |
-| Transformer        | `generator/transform.ts`          | Variable replacement in template files             |
-| Validator          | `validator.ts`                    | Compatibility checks, project name validation      |
-| Matrix             | `matrix.ts`                       | SDK/framework/use-case compatibility data          |
-| Types              | `types.ts`                        | TypeScript interfaces (Context, ValidationResult)  |
-| Logger             | `utils/logger.ts`                 | Colored console output (kleur)                     |
-| PM Detection       | `utils/detect-pm.ts`              | Package manager auto-detection                     |
-| Post-Install       | `post-install/index.ts`           | Orchestrates dependencies and validation           |
-| Git Helper         | `post-install/git.ts`             | [DEPRECATED] Former git initialization logic       |
-| PM Runner          | `post-install/package-manager.ts` | Executes package manager commands (install)        |
-| Project Validator  | `post-install/validator.ts`       | Verifies project integrity and TS compilation      |
-| Env Copier        | `generator/file-ops.ts`           | Auto-copy `.env.example` to `.env` if missing      |
-| UI Messages        | `post-install/messages.ts`        | Success/Error screens with next steps              |
-| Template Tester    | `scripts/test-templates.sh`       | Automated validation for template combinations      |
+| Component          | File                              | Purpose                                           |
+| ------------------ | --------------------------------- | ------------------------------------------------- |
+| Entry Point        | `index.ts`                        | Commander setup, orchestration, SIGINT handling   |
+| Interactive Wizard | `prompts.ts`                      | Multi-step prompts with dynamic choices           |
+| Context Builder    | `context.ts`                      | Merge args/prompts, runtime validation            |
+| Generator Engine   | `generator/index.ts`              | Orchestrates preset copying and transformation    |
+| File Operations    | `generator/file-ops.ts`           | Directory copying, env setup, security checks     |
+| Transformer        | `generator/transform.ts`          | Variable replacement in template files            |
+| Matrix             | `matrix.ts`                       | SDK/framework/use-case compatibility data         |
+| Types              | `types.ts`                        | TypeScript interfaces (Context, ValidationResult) |
+| Logger             | `utils/logger.ts`                 | Colored console output (kleur)                    |
+| PM Detection       | `utils/detect-pm.ts`              | Package manager auto-detection                    |
+| Post-Install       | `post-install/index.ts`           | Orchestrates dependencies and validation          |
+| PM Runner          | `post-install/package-manager.ts` | Executes package manager commands (install)       |
+| Project Validator  | `post-install/validator.ts`       | Verifies project integrity and TS compilation     |
+| Env Copier         | `generator/file-ops.ts`           | Auto-copy `.env.example` to `.env` if missing     |
+| UI Messages        | `post-install/messages.ts`        | Success/Error screens with next steps             |
+| Template Tester    | `scripts/test-templates.sh`       | Automated validation for preset combinations      |
 
 ### 2.4 Context Object
 
@@ -92,119 +100,96 @@ interface Context {
   sdk: 'mysten' | 'tusky' | 'hibernuts';
   framework: 'react' | 'vue' | 'plain-ts';
   useCase: 'simple-upload' | 'gallery' | 'defi-nft';
-  analytics: boolean; // Blockberry analytics integration
-  tailwind: boolean; // Tailwind CSS inclusion
   packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun';
 }
 ```
 
-## 3. Template Layer System
+**Note:** Analytics and Tailwind options were part of the original design but are not currently implemented in presets.
 
-Templates organized into composable layers merged during generation:
+## 3. Preset Architecture
 
-### 3.1 Layer Composition Flow
+**Current System:** Pre-built, validated template combinations replace runtime layer merging.
+
+### 3.1 Available Presets
+
+Located in `packages/templates/`:
+
+1. **react-mysten-simple-upload**
+   - SDK: @mysten/walrus
+   - Framework: React + Vite + TanStack Query
+   - Use Case: Single file upload/download
+   - Status: Production ready
+
+2. **react-mysten-gallery**
+   - SDK: @mysten/walrus
+   - Framework: React + Vite + TanStack Query
+   - Use Case: Multi-file gallery with localStorage indexing
+   - Status: Production ready
+
+3. **react-mysten-simple-upload-enoki**
+   - SDK: @mysten/walrus + @mysten/enoki
+   - Framework: React + Vite + TanStack Query
+   - Use Case: Upload with zkLogin authentication
+   - Status: Beta (scaffolding complete, logic pending)
+
+### 3.2 Preset Structure
+
+Each preset is a complete, standalone application:
 
 ```
-User Choices (Context)
-    ↓
-Layer Resolver (layers.ts)
-    ↓
-Active Layers Identified:
-    ├── Base Layer (always)
-    ├── SDK Layer (mysten/tusky/hibernuts)
-    ├── Framework Layer (react/vue/plain-ts)
-    ├── Use Case Layer (upload/gallery/defi-nft)
-    └── Add-ons (tailwind, analytics)
-    ↓
-Generator Orchestrator (index.ts)
-    ↓
-For each layer:
-    ├── Copy files → Target directory
-    ├── Merge package.json → Deep merge dependencies
-    ├── Transform variables → {{projectName}} replacement
-    └── Validate paths → Security checks
-    ↓
-Final Project Structure
+preset-name/
+├── src/
+│   ├── lib/                   # SDK integrations
+│   │   ├── walrus/            # Walrus client + adapter
+│   │   └── enoki/             # Enoki auth (if applicable)
+│   ├── providers/             # React context providers
+│   ├── hooks/                 # Custom React hooks
+│   ├── components/            # UI components
+│   ├── utils/                 # Utility functions
+│   ├── App.tsx                # Root component
+│   └── main.tsx               # Entry point
+├── scripts/                   # Deployment scripts
+│   ├── run-portal.sh          # Local Walrus portal
+│   └── setup-walrus-deploy.sh # Sites deployment
+├── .env.example               # Environment template
+├── package.json               # Dependencies
+├── vite.config.ts             # Build configuration
+├── tsconfig.json              # TypeScript config
+└── README.md                  # Setup guide
 ```
 
-### 3.2 Base Layer Architecture
+### 3.3 Generation Process
 
-**Location:** `templates/base/`
-
-**Purpose:** SDK-agnostic foundation with adapter pattern.
-
-**Key Files:**
-
-| File                      | Purpose                                       |
-| ------------------------- | --------------------------------------------- |
-| `src/adapters/storage.ts` | StorageAdapter interface (4 methods)          |
-| `src/types/walrus.ts`     | Type definitions (BlobId, WalrusConfig, etc.) |
-| `src/types/index.ts`      | Type barrel exports                           |
-| `src/utils/env.ts`        | Zod schemas for env validation                |
-| `src/utils/format.ts`     | Formatting utils (file size, truncate)        |
-| `.env.example`            | Required env vars template                    |
-| `tsconfig.json`           | Strict TS config (ES2022, ESM)                |
-| `package.json`            | Base deps (zod)                               |
-
-**StorageAdapter Interface:**
-
-```typescript
-export interface StorageAdapter {
-  upload(file: File, options?: UploadOptions): Promise<UploadResult>;
-  download(blobId: BlobId): Promise<Blob>;
-  delete(blobId: BlobId): Promise<void>;
-  getInfo(blobId: BlobId): Promise<BlobInfo>;
-}
+```
+User Selection (SDK + Framework + Use Case)
+    ↓
+Matrix Lookup → Preset Name Resolution
+    ↓
+Copy Preset Directory → Target Location
+    ↓
+Transform Variables ({{projectName}}, etc.)
+    ↓
+Auto-copy .env.example → .env
+    ↓
+Install Dependencies (optional)
+    ↓
+Validate TypeScript Compilation (optional)
 ```
 
-**Design Invariants:**
+**No Runtime Merging:** Unlike the original layer-based design, presets are complete templates that require no runtime composition.
 
-- Zero SDK dependencies at base
-- Single source of truth for types
-- SDK layers extend via concrete adapters
-- Use cases consume via interface only
-
-### 3.3 Layer Merging Strategy
-
-**File Conflicts:**
-
-- Later layers override earlier layers (Use Case > Framework > SDK > Base)
-- Exception: `package.json` uses deep merge (dependencies combined)
-
-**package.json Merge Rules:**
-
-1. Dependencies: Combine all, later versions win
-2. Scripts: Later layers override
-3. Metadata (name, version): Use Case layer wins
-4. Auto-sorted via `sort-package-json`
-
-**Variable Transformation:**
-
-- Mustache-style syntax: `{{variableName}}`
-- Context variables: `projectName`, `sdk`, `framework`, etc.
-- Applied to: `.ts`, `.tsx`, `.json`, `.md`, `.html`, `.env.example`
-
-## 4. Template Layering Pattern (Legacy Overview)
-
-We use a **Base + Layer + Adapter Pattern** (detailed in Section 3):
-
-1.  **Base Layer:** Contains common files (`.gitignore`, `.env.example`, `tsconfig.json`) and the **Storage Adapter Interface**.
-2.  **SDK Layer:** Implements the Storage Adapter using the Mysten Labs TypeScript SDK (`@mysten/walrus`). See `templates/sdk-mysten/` for singleton client and adapter implementation.
-3.  **Framework Layer:** Sets up the UI environment (Vite, React, Tailwind).
-4.  **Use Case Layer:** High-level features (Gallery, Upload UI) that consume the Storage Adapter.
-
-## 5. Multi-SDK Integration
+## 4. Multi-SDK Integration
 
 The project supports multiple Walrus SDKs with compatibility validation:
 
 ### 4.1 Supported SDKs
 
-| SDK       | Package                 | Frameworks           | Use Cases       | Status         |
-| --------- | ----------------------- | -------------------- | --------------- | -------------- |
-| Mysten    | `@mysten/walrus`        | React, Vue, Plain TS | All             | Testnet stable |
-| Enoki     | `@mysten/enoki`         | React                | Simple Upload   | WIP (Docs Ready) |
-| Tusky     | `@tusky-io/ts-sdk`      | React, Vue, Plain TS | Upload, Gallery | Planned        |
-| Hibernuts | `@hibernuts/walrus-sdk` | React, Plain TS      | Upload only     | Planned        |
+| SDK       | Package                 | Status                | Presets Available                                |
+| --------- | ----------------------- | --------------------- | ------------------------------------------------ |
+| Mysten    | `@mysten/walrus`        | Testnet stable        | react-mysten-simple-upload, react-mysten-gallery |
+| Enoki     | `@mysten/enoki`         | Beta (scaffolding)    | react-mysten-simple-upload-enoki                 |
+| Tusky     | `@tusky-io/ts-sdk`      | Planned (matrix only) | None                                             |
+| Hibernuts | `@hibernuts/walrus-sdk` | Planned (matrix only) | None                                             |
 
 ### 4.2 Compatibility Matrix
 
@@ -227,61 +212,70 @@ const COMPATIBILITY_MATRIX = {
 };
 ```
 
-### 5.3 Storage Adapter
+**Note:** Matrix defines theoretical combinations. Only `mysten + react` combinations have implemented presets. Vue, Plain TS, Tusky, and Hibernuts are planned but not available.
 
-Defined in Section 3.2 (Base Layer Architecture). SDK layers implement concrete adapters:
+### 4.3 Storage Adapter
+
+Defined in reference `templates/base/` layer, implemented in each preset:
 
 ```typescript
-// Base Layer Interface (templates/base/src/adapters/storage.ts)
+// StorageAdapter interface (reference)
 export interface StorageAdapter {
-  upload(file: File, options?: UploadOptions): Promise<UploadResult>;
-  download(blobId: BlobId): Promise<Blob>;
-  delete(blobId: BlobId): Promise<void>;
-  getInfo(blobId: BlobId): Promise<BlobInfo>;
+  upload(data: File | Uint8Array, options?: UploadOptions): Promise<string>;
+  download(blobId: string): Promise<Uint8Array>;
+  delete(blobId: string): Promise<void>;
+  getMetadata(blobId: string): Promise<BlobMetadata>;
 }
 ```
 
-**Implemented Adapters:**
+**Implemented in Presets:**
 
-- **sdk-mysten** (`templates/sdk-mysten/src/adapter.ts`):
-  - MystenStorageAdapter using @mysten/walrus SDK v0.9.0
-  - Singleton client pattern via `getWalrusClient()`
-  - Object-based API parameters (`{ blob, nEpochs, signer }`)
-  - V1 metadata structure with validation
-  - **Signer Required:** Upload throws error if `options.signer` not provided
-  - Accepts `WalletAccount` from `@mysten/dapp-kit` as signer (cast to `any` for compatibility)
+- Each preset contains `src/lib/walrus/adapter.ts` implementing this interface
+- Uses singleton `WalrusClient` from `client.ts`
+- Object-based SDK calls (`{ blob, nEpochs, signer }`)
+- V1 metadata structure validation
+- Signer required for uploads (injected from React hooks)
 
-## 6. React Framework Layer Architecture
+## 5. React Framework Architecture
 
-**Location:** `templates/react/`
+**Implementation:** Each React preset contains complete framework setup.
+
+**Location:** `presets/react-mysten-*/src/`
 
 **Purpose:** Modern React 18 application with Vite, TanStack Query, and Sui wallet integration.
 
-### 6.1 Project Structure
+### 5.1 Project Structure
 
 ```
-templates/react/
+presets/react-mysten-*/
 ├── src/
 │   ├── providers/           # Context providers
 │   │   ├── QueryProvider.tsx   # TanStack Query setup
-│   │   └── WalletProvider.tsx  # Sui wallet + network config
+│   │   ├── WalletProvider.tsx  # Sui wallet + network config
+│   │   └── EnokiProvider.tsx   # Enoki zkLogin (enoki preset only)
 │   ├── hooks/               # Custom React hooks
-│   │   ├── useStorage.ts       # Storage operations
-│   │   └── useWallet.ts        # Wallet state access
+│   │   ├── use-upload.ts       # Upload mutation
+│   │   ├── use-download.ts     # Download query
+│   │   ├── use-wallet.ts       # Wallet state access
+│   │   └── use-enoki-auth.ts   # Enoki auth (enoki preset only)
 │   ├── components/          # Reusable UI components
-│   │   ├── Layout.tsx
-│   │   └── WalletConnect.tsx
+│   │   ├── features/           # Feature components
+│   │   └── layout/             # Layout components
+│   ├── lib/                 # SDK integrations
+│   │   ├── walrus/             # Walrus client + adapter
+│   │   └── enoki/              # Enoki integration (enoki preset only)
+│   ├── utils/               # Utility functions
 │   ├── App.tsx              # Root component
 │   ├── main.tsx             # Entry point
 │   ├── index.css            # Global styles
-│   └── dapp-kit.css         # Wallet UI styles
+│   └── types/               # TypeScript declarations
 ├── vite.config.ts           # Vite configuration
 ├── tsconfig.json            # TypeScript config (strict mode)
 ├── .eslintrc.json           # ESLint with React rules
 └── package.json             # Dependencies
 ```
 
-### 6.2 Provider Composition Pattern
+### 5.2 Provider Composition Pattern
 
 The framework uses a layered provider pattern for dependency injection:
 
@@ -293,7 +287,11 @@ The framework uses a layered provider pattern for dependency injection:
   <WalletProvider>
     {' '}
     // Sui wallet + network config
-    <App />
+    <EnokiProvider>
+      {' '}
+      // Enoki zkLogin (enoki preset only)
+      <App />
+    </EnokiProvider>
   </WalletProvider>
 </QueryProvider>
 ```
@@ -311,18 +309,16 @@ The framework uses a layered provider pattern for dependency injection:
 - Nested QueryClient for wallet-specific queries
 - Auto-connects to Sui RPC (custom or default)
 
-### 6.3 Custom Hooks API
+**EnokiProvider (Enoki preset only):**
 
-**Storage Adapter Hook (`useStorageAdapter.ts`):**
+- zkLogin authentication flow
+- SessionStorage for auth state
+- Google OAuth integration
+- Dual-auth mode (zkLogin + standard wallets)
 
-HOC hook that injects wallet signer into storage operations. Upload requires connected wallet; read operations work without wallet.
+### 5.3 Custom Hooks API
 
-```typescript
-const adapter = useStorageAdapter();
-// Returns adapter with currentAccount auto-injected as signer
-```
-
-**Storage Hooks (`useStorage.ts`):**
+**Storage Hooks:**
 
 ```typescript
 // Upload mutation (requires wallet connection)
@@ -331,18 +327,23 @@ upload.mutate({ file: File, options?: UploadOptions });
 
 // Download query (no wallet required)
 const { data: blob } = useDownload(blobId);
-
-// Metadata query (no wallet required)
-const { data: metadata } = useMetadata(blobId);
 ```
 
 **Wallet Integration:**
 
-Uses `@mysten/dapp-kit` `useCurrentAccount()` to inject wallet as signer. All storage hooks internally use `useStorageAdapter` to ensure authenticated uploads.
+- Uses `@mysten/dapp-kit` `useCurrentAccount()` to inject wallet as signer
+- Upload operations require connected wallet
+- Read operations (download, metadata) work without wallet
+- All hooks use TanStack Query for caching and error handling
 
-All hooks use TanStack Query for caching, deduplication, and error handling.
+**Enoki Auth (Enoki preset only):**
 
-### 6.4 Vite Configuration
+```typescript
+const { login, logout, user } = useEnokiAuth();
+// zkLogin authentication with Google OAuth
+```
+
+### 5.4 Vite Configuration
 
 ```typescript
 // vite.config.ts
@@ -361,7 +362,7 @@ All hooks use TanStack Query for caching, deduplication, and error handling.
 - ESNext target for modern browsers
 - Auto-open browser on `npm run dev`
 
-### 6.5 TypeScript Configuration
+### 5.5 TypeScript Configuration
 
 **Strict Mode Enabled:**
 
@@ -370,8 +371,9 @@ All hooks use TanStack Query for caching, deduplication, and error handling.
 - `noFallthroughCasesInSwitch` - Safety checks
 - Target: ES2022 with ESNext module resolution
 - JSX: preserve (handled by Vite)
+- **Type Safety Status (verified 2026-01-18):** All SDK object-based parameters correctly typed
 
-### 6.6 Dependencies
+### 5.6 Dependencies
 
 **Core:**
 
@@ -382,6 +384,11 @@ All hooks use TanStack Query for caching, deduplication, and error handling.
 
 - `@mysten/dapp-kit@^0.14.0` - Wallet components
 - `@mysten/sui@^1.10.0` - Client library
+- `@mysten/walrus@^0.9.0` - Walrus SDK
+
+**Enoki (Enoki preset only):**
+
+- `@mysten/enoki@latest` - zkLogin SDK
 
 **State Management:**
 
@@ -393,62 +400,108 @@ All hooks use TanStack Query for caching, deduplication, and error handling.
 - `eslint` + React plugins
 - Type definitions for React
 
-### 6.7 Integration with Base/SDK Layers
+### 5.7 Integration Pattern
 
-The React layer imports from base/SDK layers:
+React presets import from their own `lib/` directory:
 
 ```typescript
-// hooks/useStorageAdapter.ts
-import { storageAdapter } from '../index.js'; // From SDK layer
-import type { UploadOptions } from '../adapters/storage.js'; // From base layer
-import { useCurrentAccount } from '@mysten/dapp-kit'; // Wallet integration
-
-// hooks/useStorage.ts
-import { useStorageAdapter } from './useStorageAdapter.js'; // HOC hook
+// hooks/use-upload.ts
+import { walrusClient } from '../lib/walrus/client';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 
 // providers/WalletProvider.tsx
-import { loadEnv } from '../utils/env.js'; // From base layer
+import { loadEnv } from '../utils/env';
 ```
 
-**Wallet-Aware Adapter Pattern (HOC Hook):**
+**Signer Injection:**
 
 ```
 React Layer (useCurrentAccount) → currentAccount
     ↓
-React Layer (useStorageAdapter) → Inject currentAccount as signer
+React Layer (useUpload hook) → Inject currentAccount as signer
     ↓
-React Layer (useStorage hooks) → Use wallet-aware adapter
-    ↓
-SDK Layer (adapter.ts) → Receive signer via options
+Lib Layer (adapter.ts) → Receive signer via options
     ↓
 Walrus SDK (writeBlob) → Use signer for on-chain transaction
 ```
 
-Hooks wrap wallet-aware `storageAdapter` in TanStack Query primitives:
-
-- `useUpload()` → `useMutation` → `useStorageAdapter().upload()` (wallet required)
-- `useDownload()` → `useQuery` → `useStorageAdapter().download()` (no wallet)
-- `useMetadata()` → `useQuery` → `useStorageAdapter().getMetadata()` (no wallet)
-
-## 7. Technology Stack
+## 6. Technology Stack
 
 **CLI:**
 
 - **Runtime:** Node.js (ESM)
 - **Tooling:** pnpm, TypeScript (strict mode), ESLint, Prettier
-- **CLI Libs:** `commander` (^11.1.0), `prompts` (^2.4.2), `kleur` (^4.1.5)
-- **Testing:** `vitest` (91/91 tests, 97.5% coverage)
-- **Build:** `tsc` (TypeScript Compiler)
+- **CLI Libs:** commander ^11.1.0, prompts ^2.4.2, kleur ^4.1.5
+- **Testing:** Vitest (91/91 tests, 97.5% coverage)
+- **Build:** tsc (TypeScript Compiler)
 
-**React Framework:**
+**React Presets:**
 
 - **UI Library:** React 18.2.0 (Hooks, Suspense, Concurrent)
 - **Build Tool:** Vite 5.0.11 (HMR, Fast Refresh)
 - **State Management:** TanStack Query 5.17.0
-- **Sui Integration:** @mysten/dapp-kit 0.14.0, @mysten/sui 1.10.0
+- **Sui Integration:** @mysten/dapp-kit 0.14.0, @mysten/sui 1.10.0, @mysten/walrus 0.9.0
+- **Enoki Integration:** @mysten/enoki (latest) - Enoki preset only
 - **Language:** TypeScript 5.3.3 (strict mode, ES2022)
 - **Linting:** ESLint 8.56 + React plugins
 
-```
+## 7. Legacy Template System (Reference)
+
+The `templates/` directory contains modular layers from the original design:
 
 ```
+templates/
+├── base/                # SDK-agnostic foundation
+├── sdk-mysten/          # @mysten/walrus adapter
+├── enoki/               # Enoki zkLogin layer
+├── react/               # React framework
+├── simple-upload/       # Upload use case
+└── gallery/             # Gallery use case
+```
+
+**Status:** Maintained for reference and documentation purposes only. Runtime generation uses presets from `packages/templates/`.
+
+**Historical Context:** Originally designed for runtime layer merging with deep package.json merging and file composition. Migrated to preset-based system for better reliability and zero-error guarantees.
+
+## 8. Key Architectural Decisions
+
+### 8.1 Preset-Based vs Layer-Based
+
+**Original Design:** Runtime composition of multiple template layers
+**Current Design:** Pre-built, validated presets
+**Reason:** Eliminates runtime merging complexity, guarantees working templates
+
+### 8.2 Git Automation Removal
+
+**Deprecated:** v0.1.3
+**Reason:** Reduced complexity, avoided permission issues, user-controlled git management
+
+### 8.3 Environment Auto-Setup
+
+**Added:** v0.1.3
+**Feature:** Auto-copy `.env.example` → `.env` with non-critical error handling
+**Benefit:** Improved DX, reduced manual setup steps
+
+### 8.4 TypeScript Strict Mode
+
+**Enforced:** All presets and CLI engine
+**Coverage:** 97.5% test coverage on CLI
+**Validation:** Automated TypeScript compilation checks in post-install
+
+## 9. Security Measures
+
+- Path traversal prevention in project names
+- NPM naming rules enforcement
+- Absolute path rejection
+- 214-character limit (npm package limit)
+- Command injection hardening in spawn operations
+- Path security validation for preset resolution
+
+## 10. Future Architecture Plans
+
+- **Vue Framework:** Add Vue preset templates
+- **Plain TypeScript:** Add vanilla TS presets
+- **Tusky SDK:** Integrate community SDK
+- **Hibernuts SDK:** Integrate alternative SDK
+- **Walrus Sites:** Automated deployment integration
+- **Seal Integration:** Private blob access control

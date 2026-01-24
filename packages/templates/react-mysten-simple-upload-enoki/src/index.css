@@ -1,0 +1,322 @@
+/* Dapp Kit styles */
+@import '@mysten/dapp-kit/dist/index.css';
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* Global styles */
+:root {
+  /* Pallette */
+  --walrus-bg-primary: #020617;
+  /* Deep Trench */
+  --walrus-bg-secondary: #0f172a;
+  /* Card/Section bg */
+  --walrus-surface: #1e293b;
+  /* Input, button bg */
+  --walrus-surface-hover: #334155;
+  /* Hover states */
+  --walrus-accent-cyan: #06b6d4;
+  /* Arctic Cyan - Primary Highlight */
+  --walrus-accent-blue: #4da2ff;
+  /* Sui Blue */
+  --walrus-accent-purple: #c084fc;
+  /* Secondary Accent */
+  --walrus-text-primary: #f8fafc;
+  /* Main Text */
+  --walrus-text-secondary: #94a3b8;
+  /* Muted Text */
+  --walrus-border: #334155;
+  /* Border Color */
+  --walrus-warning: #ef4444;
+  --walrus-success: #10b981;
+  --walrus-error: #ef4444;
+
+  /* Base Settings */
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: var(--walrus-text-primary);
+  background-color: var(--walrus-bg-primary);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--walrus-bg-primary);
+  color: var(--walrus-text-primary);
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+}
+
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--walrus-text-primary);
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 2.5em;
+}
+
+h3 {
+  font-size: 1.5em;
+}
+
+a {
+  font-weight: 500;
+  color: var(--walrus-accent-blue);
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: var(--walrus-accent-cyan);
+}
+
+/* Button Styling */
+button {
+  border-radius: 8px;
+  border: 1px solid var(--walrus-border);
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: var(--walrus-surface);
+  color: var(--walrus-text-primary);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--walrus-accent-cyan);
+  background-color: var(--walrus-surface-hover);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto var(--walrus-accent-cyan);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--walrus-bg-secondary);
+}
+
+/* Form Elements */
+input {
+  background-color: var(--walrus-surface);
+  border: 1px solid var(--walrus-border);
+  color: var(--walrus-text-primary);
+  padding: 0.6em;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1em;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--walrus-accent-cyan);
+}
+
+/* Utilities / Components */
+.card {
+  background-color: var(--walrus-bg-secondary);
+  border: 1px solid var(--walrus-border);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.2s;
+}
+
+.card:hover {
+  border-color: var(--walrus-accent-cyan);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 999px;
+  background-color: rgba(192, 132, 252, 0.15);
+  color: var(--walrus-accent-purple);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
+
+.text-accent {
+  color: var(--walrus-accent-cyan);
+}
+
+.text-secondary {
+  color: var(--walrus-text-secondary);
+}
+
+.text-error {
+  color: var(--walrus-error);
+}
+
+.text-warning {
+  color: var(--walrus-warning);
+}
+
+/* App Specific Containers */
+.simple-upload-app {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Overriding section to look like cards */
+section {
+  margin: 0;
+  padding: 2rem;
+  border: 1px solid var(--walrus-border);
+  background-color: var(--walrus-bg-secondary);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+section:hover {
+  border-color: var(--walrus-surface-hover);
+}
+
+section h3 {
+  margin-top: 0;
+  color: var(--walrus-accent-cyan);
+}
+
+.upload-form,
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.file-info {
+  background: var(--walrus-bg-primary);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px dashed var(--walrus-border);
+  text-align: left;
+}
+
+.error {
+  color: var(--walrus-error);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.warning {
+  color: var(--walrus-warning);
+}
+
+/* Code/Pre blocks */
+pre {
+  background: var(--walrus-bg-primary) !important;
+  color: var(--walrus-text-primary);
+  border: 1px solid var(--walrus-border);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Enoki zkLogin Auth Styles */
+.enoki-auth {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--walrus-surface);
+  border-radius: 8px;
+  border: 1px solid var(--walrus-accent-purple);
+}
+
+.enoki-address {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--walrus-accent-purple);
+}
+
+.google-login-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--walrus-accent-blue), var(--walrus-accent-purple));
+  border: none;
+  border-radius: 8px;
+  color: var(--walrus-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.google-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 162, 255, 0.3);
+}
+
+.logout-btn {
+  padding: 0.5rem 1rem;
+  background-color: var(--walrus-surface-hover);
+  border: 1px solid var(--walrus-border);
+  border-radius: 6px;
+  color: var(--walrus-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: var(--walrus-warning);
+  color: var(--walrus-text-primary);
+  border-color: var(--walrus-warning);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  color: var(--walrus-text-secondary);
+  font-size: 0.875rem;
+  gap: 1rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--walrus-border);
+}
+
+.auth-divider span {
+  padding: 0 0.5rem;
+}

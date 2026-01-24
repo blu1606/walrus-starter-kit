@@ -125,7 +125,7 @@ describe('resolvePresetPath', () => {
 
     const presetPath = resolvePresetPath(context);
 
-    expect(presetPath).toContain('presets');
+    expect(presetPath).toContain('templates');
     expect(presetPath).toContain('react-mysten-simple-upload');
     expect(path.isAbsolute(presetPath)).toBe(true);
   });
@@ -147,6 +147,6 @@ describe('resolvePresetPath', () => {
     expect(() => resolvePresetPath(context)).not.toThrow();
 
     const presetPath = resolvePresetPath(context);
-    expect(presetPath).toContain('presets');
+    expect(presetPath).toContain('templates');
   });
 });

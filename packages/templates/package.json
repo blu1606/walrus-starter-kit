@@ -1,0 +1,14 @@
+{
+  "name": "@blu1606/walrus-templates",
+  "version": "0.1.5",
+  "description": "Pre-built templates for Walrus applications",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "walrus",
+    "templates",
+    "scaffolding"
+  ],
+  "author": "blu1606 dongthanhquandtq@gmail.com",
+  "license": "MIT"
+}

@@ -5,19 +5,19 @@ import type { Context } from '../types.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Presets are in packages/cli/presets (published with package)
-const PRESETS_ROOT = path.join(__dirname, '../../presets');
+// Presets are in packages/templates (separate package)
+const PRESETS_ROOT = path.join(__dirname, '../../../templates');
 
 /**
- * Validate that a preset path is within the presets root (prevent path traversal)
+ * Validate that a template path is within the templates root (prevent path traversal)
  */
-function validatePresetPath(presetPath: string): void {
-  const normalized = path.resolve(presetPath);
+function validateTemplatePath(templatePath: string): void {
+  const normalized = path.resolve(templatePath);
   const root = path.resolve(PRESETS_ROOT);
 
   if (!normalized.startsWith(root)) {
     throw new Error(
-      `Invalid preset path: ${presetPath} is outside presets root`
+      `Invalid template path: ${templatePath} is outside templates root`
     );
   }
 }
@@ -64,7 +64,7 @@ export function resolvePresetPath(context: Context): string {
   const presetPath = path.join(PRESETS_ROOT, presetName);
 
   // Validate path for security
-  validatePresetPath(presetPath);
+  validateTemplatePath(presetPath);
 
   return presetPath;
 }

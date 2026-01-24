@@ -91,7 +91,7 @@ export function validateProjectName(name: string): boolean | string {
 
 - **Orchestration:** Use a dedicated orchestrator (`runPostInstall`) to manage the sequence of post-generation tasks.
 - **Dependency Installation:** Auto-detect the user's preferred package manager (pnpm, npm, yarn, bun) and run `install`.
-- **Git Initialization:** [DEPRECATED] Automatic git initialization has been removed to reduce complexity and avoid permission issues.
+- **Git Initialization:** **DEPRECATED** as of v0.1.3 - Git management is user-controlled. Automatic initialization removed to reduce complexity and permission issues.
 - **Validation:** Run automated checks after generation, including `package.json` integrity and TypeScript compilation via `npx tsc --noEmit`.
 - **Skip Flags:** Always provide flags (e.g., `--skip-install`, `--skip-validation`) to allow users to opt-out of automatic tasks.
 - **Silent Failures:** Post-install warnings (like dependency installation failure) should not exit the process with an error code if the project was successfully generated.
@@ -132,13 +132,13 @@ export function validateProjectName(name: string): boolean | string {
 - **HOC Pattern:** `useStorageAdapter` injects wallet signer into operations
 - All storage hooks consume wallet-aware adapter via `useStorageAdapter()`
 
-**SDK Integration (v0.9.0):**
+**SDK Integration (v0.9.0 - VERIFIED):**
 
-All Walrus SDK calls use object-based parameters:
+All Walrus SDK calls use object-based parameters (verified 2026-01-18):
 
 ```typescript
 // Upload with object params
-await client.writeBlobToUploadRelay({ blob, nEpochs });
+await client.writeBlobToUploadRelay({ blob, nEpochs, signer });
 
 // Download with object params
 await client.readBlob({ blobId });
