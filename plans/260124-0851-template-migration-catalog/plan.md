@@ -52,14 +52,14 @@ created: 2026-01-24
 ### Action Items
 
 - [x] Implement `isCompatible` logic to hide planned options in `phase-03-compat-matrix.md`. (DONE)
-- [ ] Define custom `VirtualFS` interfaces in `phase-04-generator-approach.md`.
+- [x] Define custom `VirtualFS` interfaces in `phase-04-generator-approach.md`. (DONE)
 
 ## Phases
 
 1. [x] [phase-01-inventory.md](./phase-01-inventory.md) — Inventory presets/templates, map assets to slices. (DONE)
 2. [x] [phase-02-target-layout.md](./phase-02-target-layout.md) — Define catalog directory/naming and slice taxonomy. (DONE)
 3. [x] [phase-03-compat-matrix.md](./phase-03-compat-matrix.md) — Draft compatibility rules and validation flow. (DONE)
-4. [phase-04-generator-approach.md](./phase-04-generator-approach.md) — Choose generation/composition mechanics and integration points.
+4. [x] [phase-04-generator-approach.md](./phase-04-generator-approach.md) — Choose generation/composition mechanics and integration points. (DONE)
 5. [phase-05-migration-plan.md](./phase-05-migration-plan.md) — Stepwise migration from presets to catalog.
 6. [phase-06-validation.md](./phase-06-validation.md) — Validation questions (3–8) and acceptance criteria.
 
