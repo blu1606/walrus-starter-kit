@@ -1,29 +1,9 @@
 import path from 'node:path';
 import { Context, ValidationResult } from './types.js';
-import { COMPATIBILITY_MATRIX } from './matrix.js';
+import { isCompatible } from './compatibility-rules.js';
 
 export function validateContext(context: Context): ValidationResult {
-  const { sdk, framework, useCase } = context;
-
-  // Check framework compatibility
-  if (!(COMPATIBILITY_MATRIX[sdk].frameworks as readonly string[]).includes(framework)) {
-    return {
-      valid: false,
-      error: `SDK "${sdk}" is incompatible with framework "${framework}"`,
-      suggestion: `Compatible frameworks for ${sdk}: ${COMPATIBILITY_MATRIX[sdk].frameworks.join(', ')}`,
-    };
-  }
-
-  // Check use case compatibility
-  if (!(COMPATIBILITY_MATRIX[sdk].useCases as readonly string[]).includes(useCase)) {
-    return {
-      valid: false,
-      error: `SDK "${sdk}" does not support use case "${useCase}"`,
-      suggestion: `Supported use cases for ${sdk}: ${COMPATIBILITY_MATRIX[sdk].useCases.join(', ')}`,
-    };
-  }
-
-  return { valid: true };
+  return isCompatible(context);
 }
 
 export function validateProjectName(name: string): boolean | string {

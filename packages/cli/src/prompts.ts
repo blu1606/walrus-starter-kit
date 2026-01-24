@@ -3,6 +3,7 @@ import { Context } from './types.js';
 import { COMPATIBILITY_MATRIX, SDK_METADATA } from './matrix.js';
 import { validateProjectName } from './validator.js';
 import { detectPackageManager } from './utils/detect-pm.js';
+import { isStable } from './compatibility-rules.js';
 
 export async function runPrompts(
   initial: Partial<Context> = {}
@@ -39,7 +40,7 @@ export async function runPrompts(
             title: `${SDK_METADATA.hibernuts.name} - ${SDK_METADATA.hibernuts.description}`,
             value: 'hibernuts',
           },
-        ],
+        ].filter((c) => isStable('sdk', c.value)),
         initial: 0,
       },
       {
@@ -51,15 +52,17 @@ export async function runPrompts(
           const frameworks =
             COMPATIBILITY_MATRIX[sdk as keyof typeof COMPATIBILITY_MATRIX]
               .frameworks;
-          return frameworks.map((f) => ({
-            title:
-              f === 'react'
-                ? 'React + Vite'
-                : f === 'vue'
-                  ? 'Vue + Vite'
-                  : 'Plain TypeScript',
-            value: f,
-          }));
+          return frameworks
+            .filter((f) => isStable('framework', f))
+            .map((f) => ({
+              title:
+                f === 'react'
+                  ? 'React + Vite'
+                  : f === 'vue'
+                    ? 'Vue + Vite'
+                    : 'Plain TypeScript',
+              value: f,
+            }));
         },
       },
       {
@@ -71,17 +74,20 @@ export async function runPrompts(
           const useCases =
             COMPATIBILITY_MATRIX[sdk as keyof typeof COMPATIBILITY_MATRIX]
               .useCases;
-          return useCases.map((uc) => ({
-            title:
-              uc === 'simple-upload'
-                ? 'Simple Upload (Single file)'
-                : uc === 'gallery'
-                  ? 'File Gallery (Multiple files)'
-                  : 'DeFi/NFT Metadata',
-            value: uc,
-          }));
+          return useCases
+            .filter((uc) => isStable('useCase', uc))
+            .map((uc) => ({
+              title:
+                uc === 'simple-upload'
+                  ? 'Simple Upload (Single file)'
+                  : uc === 'gallery'
+                    ? 'File Gallery (Multiple files)'
+                    : 'DeFi/NFT Metadata',
+              value: uc,
+            }));
         },
       },
+
       {
         // TODO: Re-enable when analytics template is created
         type: null, // Temporarily disabled - template not implemented
