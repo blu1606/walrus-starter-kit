@@ -22,7 +22,9 @@ describe('validateProjectName', () => {
 
   it('should reject names with backslashes', () => {
     expect(validateProjectName('my\\project')).toContain('path separators');
-    expect(validateProjectName('C:\\Windows\\path')).toContain('path separators');
+    expect(validateProjectName('C:\\Windows\\path')).toContain(
+      'path separators'
+    );
   });
 
   it('should reject absolute paths', () => {
@@ -69,47 +71,58 @@ describe('validateContext', () => {
     useCase: 'simple-upload',
     analytics: false,
     tailwind: true,
+    useZkLogin: false,
     packageManager: 'pnpm',
     ...overrides,
   });
 
   it('should validate compatible sdk and framework combinations', () => {
-    expect(validateContext(createContext({ sdk: 'mysten', framework: 'react' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'mysten', framework: 'vue' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'mysten', framework: 'plain-ts' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'tusky', framework: 'react' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'hibernuts', framework: 'react' }))).toEqual({ valid: true });
+    expect(
+      validateContext(createContext({ sdk: 'mysten', framework: 'react' }))
+    ).toEqual({ valid: true });
   });
 
   it('should reject incompatible sdk and framework combinations', () => {
-    const result = validateContext(createContext({ sdk: 'hibernuts', framework: 'vue' }));
+    const result = validateContext(
+      createContext({ sdk: 'mysten', framework: 'vue' })
+    );
     expect(result.valid).toBe(false);
-    expect(result.error).toContain('incompatible');
-    expect(result.suggestion).toContain('Compatible frameworks');
+    expect(result.error).toContain('only stable with "react"');
+    expect(result.suggestion).toContain('Please select "react"');
   });
 
   it('should validate compatible sdk and useCase combinations', () => {
-    expect(validateContext(createContext({ sdk: 'mysten', useCase: 'simple-upload' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'mysten', useCase: 'gallery' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'mysten', useCase: 'defi-nft' }))).toEqual({ valid: true });
-    expect(validateContext(createContext({ sdk: 'tusky', useCase: 'simple-upload' }))).toEqual({ valid: true });
+    expect(
+      validateContext(
+        createContext({ sdk: 'mysten', useCase: 'simple-upload' })
+      )
+    ).toEqual({ valid: true });
+    expect(
+      validateContext(createContext({ sdk: 'mysten', useCase: 'gallery' }))
+    ).toEqual({ valid: true });
   });
 
   it('should reject incompatible sdk and useCase combinations', () => {
-    const result = validateContext(createContext({ sdk: 'tusky', useCase: 'defi-nft' }));
+    const result = validateContext(
+      createContext({ sdk: 'tusky', useCase: 'simple-upload' })
+    );
     expect(result.valid).toBe(false);
-    expect(result.error).toContain('does not support');
-    expect(result.suggestion).toContain('Supported use cases');
+    expect(result.error).toContain('currently planned');
+    expect(result.suggestion).toContain('Please select "mysten"');
   });
 
   it('should reject hibernuts with gallery use case', () => {
-    const result = validateContext(createContext({ sdk: 'hibernuts', useCase: 'gallery' }));
+    const result = validateContext(
+      createContext({ sdk: 'hibernuts', useCase: 'gallery' })
+    );
     expect(result.valid).toBe(false);
-    expect(result.error).toBeDefined();
+    expect(result.error).toContain('currently planned');
   });
 
   it('should provide helpful suggestions in error messages', () => {
-    const result = validateContext(createContext({ sdk: 'hibernuts', framework: 'vue' }));
-    expect(result.suggestion).toMatch(/react|plain-ts/);
+    const result = validateContext(
+      createContext({ sdk: 'hibernuts', framework: 'react' })
+    );
+    expect(result.suggestion).toMatch(/mysten/);
   });
 });
